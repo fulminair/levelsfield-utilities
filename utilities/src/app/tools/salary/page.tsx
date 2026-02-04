@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 const currencyFormatter = new Intl.NumberFormat("en-GH", {
   style: "currency",
@@ -35,6 +35,16 @@ const calculatePaye = (chargeable: number) => {
   if (income <= 50416.67) return 4572.67 + (income - 19896.67) * 0.3;
   return 13728.67 + (income - 50416.67) * 0.35;
 };
+
+type Html2Canvas = (
+  element: HTMLElement,
+  options?: {
+    scale?: number;
+    useCORS?: boolean;
+    logging?: boolean;
+    backgroundColor?: string;
+  }
+) => Promise<HTMLCanvasElement>;
 
 type SalaryForm = {
   name: string;
@@ -81,6 +91,7 @@ export default function SalaryCalculatorPage() {
   const [entries, setEntries] = useState<SalaryEntry[]>([]);
   const [reportType, setReportType] = useState<ReportType>("payroll");
   const [reportFormat, setReportFormat] = useState<ReportFormat>("pdf");
+  const summaryRef = useRef<HTMLDivElement | null>(null);
 
   const calculations = useMemo(() => {
     const basic = toNumber(form.basic);
@@ -145,6 +156,117 @@ export default function SalaryCalculatorPage() {
 
   const handleRemoveEntry = (id: string) => {
     setEntries((prev) => prev.filter((entry) => entry.id !== id));
+  };
+
+  const buildSummaryText = () => {
+    const title = form.name.trim()
+      ? `Salary Summary - ${form.name.trim()}`
+      : "Salary Summary";
+    const lines = [
+      title,
+      `Basic salary: ${formatMoney(calculations.basic)}`,
+      `Food allowance: ${formatMoney(toNumber(form.food))}`,
+      `Transport allowance: ${formatMoney(toNumber(form.transportation))}`,
+      `Utilities allowance: ${formatMoney(toNumber(form.utilities))}`,
+      `Rent allowance: ${formatMoney(toNumber(form.rent))}`,
+      `Other allowance: ${formatMoney(toNumber(form.others))}`,
+      `Allowances total: ${formatMoney(calculations.allowances)}`,
+      `Gross pay: ${formatMoney(calculations.gross)}`,
+      `Employee SSNIT Tier 1 (5%): ${formatMoney(calculations.employeeSsnit)}`,
+      `Chargeable income: ${formatMoney(calculations.chargeable)}`,
+      `PAYE: ${formatMoney(calculations.paye)}`,
+      `Loan deductions: ${formatMoney(calculations.loan)}`,
+      `Total deductions: ${formatMoney(calculations.totalDeductions)}`,
+      `Net pay: ${formatMoney(calculations.netPay)}`,
+      `Employer SSNIT Tier 2 (13.5%): ${formatMoney(calculations.employerSsnit)}`
+    ];
+    return lines.join("\n");
+  };
+
+  const handleCopySummaryText = async () => {
+    const text = buildSummaryText();
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      alert("Summary copied to clipboard.");
+    } catch {
+      prompt("Copy summary text:", text);
+    }
+  };
+
+  const ensureHtml2Canvas = () => {
+    const w = window as Window & { html2canvas?: Html2Canvas };
+    if (w.html2canvas) return Promise.resolve(w.html2canvas);
+
+    const existing = document.getElementById("html2canvas-cdn");
+    if (existing) {
+      return new Promise<Html2Canvas>((resolve, reject) => {
+        existing.addEventListener("load", () => resolve(w.html2canvas as Html2Canvas), {
+          once: true
+        });
+        existing.addEventListener(
+          "error",
+          () => reject(new Error("Failed to load html2canvas")),
+          { once: true }
+        );
+      });
+    }
+
+    return new Promise<Html2Canvas>((resolve, reject) => {
+      const script = document.createElement("script");
+      script.id = "html2canvas-cdn";
+      script.src =
+        "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+      script.onload = () => resolve(w.html2canvas as Html2Canvas);
+      script.onerror = () => reject(new Error("Failed to load html2canvas"));
+      document.head.appendChild(script);
+    });
+  };
+
+  const handleCopySummarySnapshot = async () => {
+    if (!summaryRef.current) {
+      alert("Summary is not ready yet.");
+      return;
+    }
+    try {
+      const html2canvas = await ensureHtml2Canvas();
+      const canvas = await html2canvas(summaryRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff"
+      });
+
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Snapshot failed"))), "image/png");
+      });
+
+      const canClipboardWrite =
+        navigator.clipboard &&
+        typeof navigator.clipboard.write === "function" &&
+        "ClipboardItem" in window;
+
+      if (canClipboardWrite) {
+        await navigator.clipboard.write([
+          new window.ClipboardItem({ "image/png": blob })
+        ]);
+        alert("Summary snapshot copied to clipboard.");
+        return;
+      }
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "salary-summary.png";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      alert("Snapshot downloaded (clipboard not available).");
+    } catch (error) {
+      console.error(error);
+      alert("Unable to copy snapshot. Please try again.");
+    }
   };
 
   const buildReport = (type: ReportType) => {
@@ -464,16 +586,37 @@ export default function SalaryCalculatorPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/60 bg-white/80 p-6 shadow-card backdrop-blur">
-            <div className="flex flex-col gap-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1e5a6a]">
-                Summary
-              </p>
-              <h2 className="text-xl font-semibold text-[#18212b]">Auto-calculated</h2>
-              <p className="text-sm text-[#5f6b7a]">
-                Gross pay, SSNIT, PAYE, total deductions, and net pay update as you
-                type.
-              </p>
+          <div
+            ref={summaryRef}
+            className="rounded-2xl border border-white/60 bg-white/80 p-6 shadow-card backdrop-blur"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="flex flex-col gap-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1e5a6a]">
+                  Summary
+                </p>
+                <h2 className="text-xl font-semibold text-[#18212b]">Auto-calculated</h2>
+                <p className="text-sm text-[#5f6b7a]">
+                  Gross pay, SSNIT, PAYE, total deductions, and net pay update as you
+                  type.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={handleCopySummaryText}
+                  className="rounded-full border border-[#1e5a6a]/30 px-3 py-1 text-xs font-semibold text-[#0f3a45]"
+                >
+                  Copy text
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopySummarySnapshot}
+                  className="rounded-full border border-[#1e5a6a]/30 px-3 py-1 text-xs font-semibold text-[#0f3a45]"
+                >
+                  Copy snapshot
+                </button>
+              </div>
             </div>
 
             <div className="mt-6 grid gap-3">
