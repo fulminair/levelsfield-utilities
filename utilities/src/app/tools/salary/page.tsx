@@ -75,6 +75,38 @@ type SalaryEntry = {
 type ReportType = "payroll" | "paye" | "ssnit";
 type ReportFormat = "pdf" | "csv" | "json";
 
+type PayeBracket = {
+  lower: number;
+  upper: number | null;
+  rate: number;
+  baseTax: number;
+};
+
+const PAYE_BRACKETS: PayeBracket[] = [
+  { lower: 0, upper: 490, rate: 0, baseTax: 0 },
+  { lower: 490, upper: 600, rate: 0.05, baseTax: 0 },
+  { lower: 600, upper: 730, rate: 0.1, baseTax: 5.5 },
+  { lower: 730, upper: 3896.67, rate: 0.175, baseTax: 18.5 },
+  { lower: 3896.67, upper: 19896.67, rate: 0.25, baseTax: 572.67 },
+  { lower: 19896.67, upper: 50416.67, rate: 0.3, baseTax: 4572.67 },
+  { lower: 50416.67, upper: null, rate: 0.35, baseTax: 13728.67 }
+];
+
+const calculateChargeableFromNet = (netPay: number) => {
+  const net = Math.max(0, netPay);
+  if (net === 0) return 0;
+  for (const bracket of PAYE_BRACKETS) {
+    const denominator = 1 - bracket.rate;
+    if (denominator <= 0) continue;
+    const candidate =
+      (net + bracket.baseTax - bracket.lower * bracket.rate) / denominator;
+    const withinLower = candidate >= bracket.lower - 0.0001;
+    const withinUpper = bracket.upper === null ? true : candidate <= bracket.upper + 0.0001;
+    if (withinLower && withinUpper) return candidate;
+  }
+  return net;
+};
+
 const initialForm: SalaryForm = {
   name: "",
   basic: "",
@@ -91,6 +123,7 @@ export default function SalaryCalculatorPage() {
   const [entries, setEntries] = useState<SalaryEntry[]>([]);
   const [reportType, setReportType] = useState<ReportType>("payroll");
   const [reportFormat, setReportFormat] = useState<ReportFormat>("pdf");
+  const [reverseNetPay, setReverseNetPay] = useState<string>("");
   const summaryRef = useRef<HTMLDivElement | null>(null);
 
   const calculations = useMemo(() => {
@@ -123,6 +156,38 @@ export default function SalaryCalculatorPage() {
       employerSsnit: roundMoney(employerSsnit)
     };
   }, [form]);
+
+  const reverseCalculations = useMemo(() => {
+    const net = toNumber(reverseNetPay);
+    if (!net) {
+      return {
+        basic: 0,
+        gross: 0,
+        chargeable: 0,
+        paye: 0,
+        employeeSsnit: 0,
+        employerSsnit: 0,
+        netPay: 0
+      };
+    }
+
+    const chargeable = calculateChargeableFromNet(net);
+    const gross = chargeable / (1 - EMPLOYEE_SSNIT_RATE);
+    const basic = gross;
+    const employeeSsnit = basic * EMPLOYEE_SSNIT_RATE;
+    const paye = calculatePaye(chargeable);
+    const employerSsnit = basic * EMPLOYER_SSNIT_RATE;
+
+    return {
+      basic: roundMoney(basic),
+      gross: roundMoney(gross),
+      chargeable: roundMoney(chargeable),
+      paye: roundMoney(paye),
+      employeeSsnit: roundMoney(employeeSsnit),
+      employerSsnit: roundMoney(employerSsnit),
+      netPay: roundMoney(net)
+    };
+  }, [reverseNetPay]);
 
   const updateField = (field: keyof SalaryForm, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -751,6 +816,71 @@ export default function SalaryCalculatorPage() {
                 )}
               </tbody>
             </table>
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-white/60 bg-white/80 p-6 shadow-card backdrop-blur">
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1e5a6a]">
+              Reverse Calculator
+            </p>
+            <h2 className="text-xl font-semibold text-[#18212b]">
+              Net Pay → Basic Salary
+            </h2>
+            <p className="text-sm text-[#5f6b7a]">
+              Enter net pay to estimate the basic salary. Allowances and loan
+              deductions are ignored in this reverse calculation.
+            </p>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-[1fr_1.2fr]">
+            <div>
+              <label className="text-sm font-semibold text-[#1f2933]">
+                Net Pay (GHS)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={reverseNetPay}
+                onChange={(e) => setReverseNetPay(e.target.value)}
+                placeholder="0.00"
+                className="mt-2 w-full rounded-xl border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1f2933] shadow-sm focus:border-[#1e5a6a] focus:outline-none"
+              />
+            </div>
+
+            <div className="grid gap-3 rounded-xl border border-[#e2e8f0] bg-white p-4 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-[#5f6b7a]">Basic / Gross salary</span>
+                <span className="font-semibold text-[#18212b]">
+                  {formatMoney(reverseCalculations.basic)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[#5f6b7a]">Chargeable income</span>
+                <span className="font-semibold text-[#18212b]">
+                  {formatMoney(reverseCalculations.chargeable)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[#5f6b7a]">Employee SSNIT Tier 1 (5%)</span>
+                <span className="font-semibold text-[#18212b]">
+                  {formatMoney(reverseCalculations.employeeSsnit)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[#5f6b7a]">PAYE</span>
+                <span className="font-semibold text-[#18212b]">
+                  {formatMoney(reverseCalculations.paye)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[#5f6b7a]">Employer SSNIT Tier 2 (13.5%)</span>
+                <span className="font-semibold text-[#18212b]">
+                  {formatMoney(reverseCalculations.employerSsnit)}
+                </span>
+              </div>
+            </div>
           </div>
         </section>
 
