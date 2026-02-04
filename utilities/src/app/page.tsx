@@ -16,6 +16,13 @@ const tools = [
     external: false
   },
   {
+    title: "Salary Calculator",
+    description: "Calculate gross pay, PAYE, SSNIT, and net salaries.",
+    badge: "Internal",
+    href: "/tools/salary",
+    external: false
+  },
+  {
     title: "Ledgerly",
     description: "Open the Ledgerly workspace for reporting and audit trails.",
     badge: "External",
