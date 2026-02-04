@@ -580,13 +580,13 @@ export default function SalaryCalculatorPage() {
     <main className="min-h-screen px-6 py-12 md:px-10">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
         <header className="flex flex-col gap-3">
-          <Link href="/" className="text-sm font-semibold text-[#1e5a6a]">
+          <Link href="/" className="text-sm font-semibold text-[color:var(--accent)]">
             ← Back to Utilities
           </Link>
-          <h1 className="text-3xl font-semibold text-[#18212b] md:text-4xl">
+          <h1 className="text-3xl font-semibold text-[color:var(--text-primary)] md:text-4xl">
             Salary Calculator
           </h1>
-          <p className="max-w-3xl text-sm text-[#5f6b7a] md:text-base">
+          <p className="max-w-3xl text-sm text-[color:var(--text-secondary)] md:text-base">
             Ghana PAYE (2024) with SSNIT 5.5% employee deductions and 13% employer
             contribution. Enter pay details below and add each
             employee to the table.
@@ -594,20 +594,20 @@ export default function SalaryCalculatorPage() {
         </header>
 
         <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-2xl border border-white/60 bg-white/80 p-6 shadow-card backdrop-blur">
+          <div className="rounded-2xl border border-[color:var(--card-border)] bg-[color:var(--card-bg)] p-6 shadow-card backdrop-blur">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1e5a6a]">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--accent)]">
                   Inputs
                 </p>
-                <h2 className="text-xl font-semibold text-[#18212b]">
+                <h2 className="text-xl font-semibold text-[color:var(--text-primary)]">
                   Employee Pay Details
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={handleAddEmployee}
-                className="inline-flex items-center justify-center rounded-full border border-[#1e5a6a]/30 px-4 py-2 text-sm font-semibold text-[#0f3a45]"
+                className="inline-flex items-center justify-center rounded-full border border-[color:var(--accent-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--accent-strong)]"
               >
                 Add Employee
               </button>
@@ -615,7 +615,7 @@ export default function SalaryCalculatorPage() {
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
-                <label className="text-sm font-semibold text-[#1f2933]">
+                <label className="text-sm font-semibold text-[color:var(--text-tertiary)]">
                   Employee Name
                 </label>
                 <input
@@ -623,12 +623,12 @@ export default function SalaryCalculatorPage() {
                   value={form.name}
                   onChange={(e) => updateField("name", e.target.value)}
                   placeholder="e.g. Ama Owusu"
-                  className="mt-2 w-full rounded-xl border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1f2933] shadow-sm focus:border-[#1e5a6a] focus:outline-none"
+                  className="mt-2 w-full rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--text-tertiary)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-[#1f2933]">
+                <label className="text-sm font-semibold text-[color:var(--text-tertiary)]">
                   Basic Salary (GHS)
                 </label>
                 <input
@@ -638,12 +638,12 @@ export default function SalaryCalculatorPage() {
                   value={form.basic}
                   onChange={(e) => updateField("basic", e.target.value)}
                   placeholder="0.00"
-                  className="mt-2 w-full rounded-xl border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1f2933] shadow-sm focus:border-[#1e5a6a] focus:outline-none"
+                  className="mt-2 w-full rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--text-tertiary)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-[#1f2933]">
+                <label className="text-sm font-semibold text-[color:var(--text-tertiary)]">
                   Food Allowance
                 </label>
                 <input
@@ -653,12 +653,12 @@ export default function SalaryCalculatorPage() {
                   value={form.food}
                   onChange={(e) => updateField("food", e.target.value)}
                   placeholder="0.00"
-                  className="mt-2 w-full rounded-xl border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1f2933] shadow-sm focus:border-[#1e5a6a] focus:outline-none"
+                  className="mt-2 w-full rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--text-tertiary)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-[#1f2933]">
+                <label className="text-sm font-semibold text-[color:var(--text-tertiary)]">
                   Transportation Allowance
                 </label>
                 <input
@@ -668,12 +668,12 @@ export default function SalaryCalculatorPage() {
                   value={form.transportation}
                   onChange={(e) => updateField("transportation", e.target.value)}
                   placeholder="0.00"
-                  className="mt-2 w-full rounded-xl border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1f2933] shadow-sm focus:border-[#1e5a6a] focus:outline-none"
+                  className="mt-2 w-full rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--text-tertiary)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-[#1f2933]">
+                <label className="text-sm font-semibold text-[color:var(--text-tertiary)]">
                   Utilities Allowance
                 </label>
                 <input
@@ -683,12 +683,12 @@ export default function SalaryCalculatorPage() {
                   value={form.utilities}
                   onChange={(e) => updateField("utilities", e.target.value)}
                   placeholder="0.00"
-                  className="mt-2 w-full rounded-xl border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1f2933] shadow-sm focus:border-[#1e5a6a] focus:outline-none"
+                  className="mt-2 w-full rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--text-tertiary)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-[#1f2933]">
+                <label className="text-sm font-semibold text-[color:var(--text-tertiary)]">
                   Rent Allowance
                 </label>
                 <input
@@ -698,12 +698,12 @@ export default function SalaryCalculatorPage() {
                   value={form.rent}
                   onChange={(e) => updateField("rent", e.target.value)}
                   placeholder="0.00"
-                  className="mt-2 w-full rounded-xl border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1f2933] shadow-sm focus:border-[#1e5a6a] focus:outline-none"
+                  className="mt-2 w-full rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--text-tertiary)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-[#1f2933]">
+                <label className="text-sm font-semibold text-[color:var(--text-tertiary)]">
                   Other Allowances
                 </label>
                 <input
@@ -713,12 +713,12 @@ export default function SalaryCalculatorPage() {
                   value={form.others}
                   onChange={(e) => updateField("others", e.target.value)}
                   placeholder="0.00"
-                  className="mt-2 w-full rounded-xl border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1f2933] shadow-sm focus:border-[#1e5a6a] focus:outline-none"
+                  className="mt-2 w-full rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--text-tertiary)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-semibold text-[#1f2933]">
+                <label className="text-sm font-semibold text-[color:var(--text-tertiary)]">
                   Loan Deductions
                 </label>
                 <input
@@ -728,7 +728,7 @@ export default function SalaryCalculatorPage() {
                   value={form.loan}
                   onChange={(e) => updateField("loan", e.target.value)}
                   placeholder="0.00"
-                  className="mt-2 w-full rounded-xl border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1f2933] shadow-sm focus:border-[#1e5a6a] focus:outline-none"
+                  className="mt-2 w-full rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--text-tertiary)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none"
                 />
               </div>
             </div>
@@ -736,15 +736,15 @@ export default function SalaryCalculatorPage() {
 
           <div
             ref={summaryRef}
-            className="rounded-2xl border border-white/60 bg-white/80 p-6 shadow-card backdrop-blur"
+            className="rounded-2xl border border-[color:var(--card-border)] bg-[color:var(--card-bg)] p-6 shadow-card backdrop-blur"
           >
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="flex flex-col gap-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1e5a6a]">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--accent)]">
                   Summary
                 </p>
-                <h2 className="text-xl font-semibold text-[#18212b]">Auto-calculated</h2>
-                <p className="text-sm text-[#5f6b7a]">
+                <h2 className="text-xl font-semibold text-[color:var(--text-primary)]">Auto-calculated</h2>
+                <p className="text-sm text-[color:var(--text-secondary)]">
                   Gross pay, SSNIT, PAYE, total deductions, and net pay update as you
                   type.
                 </p>
@@ -753,14 +753,14 @@ export default function SalaryCalculatorPage() {
                 <button
                   type="button"
                   onClick={handleCopySummaryText}
-                  className="rounded-full border border-[#1e5a6a]/30 px-3 py-1 text-xs font-semibold text-[#0f3a45]"
+                  className="rounded-full border border-[color:var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--accent-strong)]"
                 >
                   Copy text
                 </button>
                 <button
                   type="button"
                   onClick={handleCopySummarySnapshot}
-                  className="rounded-full border border-[#1e5a6a]/30 px-3 py-1 text-xs font-semibold text-[#0f3a45]"
+                  className="rounded-full border border-[color:var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--accent-strong)]"
                 >
                   Copy snapshot
                 </button>
@@ -769,62 +769,62 @@ export default function SalaryCalculatorPage() {
 
             <div className="mt-6 grid gap-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[#5f6b7a]">Basic salary</span>
-                <span className="font-semibold text-[#18212b]">
+                <span className="text-[color:var(--text-secondary)]">Basic salary</span>
+                <span className="font-semibold text-[color:var(--text-primary)]">
                   {formatMoney(calculations.basic)}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[#5f6b7a]">Allowances total</span>
-                <span className="font-semibold text-[#18212b]">
+                <span className="text-[color:var(--text-secondary)]">Allowances total</span>
+                <span className="font-semibold text-[color:var(--text-primary)]">
                   {formatMoney(calculations.allowances)}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[#5f6b7a]">Gross pay</span>
-                <span className="font-semibold text-[#18212b]">
+                <span className="text-[color:var(--text-secondary)]">Gross pay</span>
+                <span className="font-semibold text-[color:var(--text-primary)]">
                   {formatMoney(calculations.gross)}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[#5f6b7a]">Employee SSNIT (5.5%)</span>
-                <span className="font-semibold text-[#18212b]">
+                <span className="text-[color:var(--text-secondary)]">Employee SSNIT (5.5%)</span>
+                <span className="font-semibold text-[color:var(--text-primary)]">
                   {formatMoney(calculations.employeeSsnit)}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[#5f6b7a]">Chargeable income</span>
-                <span className="font-semibold text-[#18212b]">
+                <span className="text-[color:var(--text-secondary)]">Chargeable income</span>
+                <span className="font-semibold text-[color:var(--text-primary)]">
                   {formatMoney(calculations.chargeable)}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[#5f6b7a]">PAYE</span>
-                <span className="font-semibold text-[#18212b]">
+                <span className="text-[color:var(--text-secondary)]">PAYE</span>
+                <span className="font-semibold text-[color:var(--text-primary)]">
                   {formatMoney(calculations.paye)}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[#5f6b7a]">Loan deductions</span>
-                <span className="font-semibold text-[#18212b]">
+                <span className="text-[color:var(--text-secondary)]">Loan deductions</span>
+                <span className="font-semibold text-[color:var(--text-primary)]">
                   {formatMoney(calculations.loan)}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[#5f6b7a]">Total deductions</span>
-                <span className="font-semibold text-[#18212b]">
+                <span className="text-[color:var(--text-secondary)]">Total deductions</span>
+                <span className="font-semibold text-[color:var(--text-primary)]">
                   {formatMoney(calculations.totalDeductions)}
                 </span>
               </div>
               <div className="flex items-center justify-between text-base">
-                <span className="font-semibold text-[#0f3a45]">Net pay</span>
-                <span className="text-lg font-semibold text-[#0f3a45]">
+                <span className="font-semibold text-[color:var(--accent-strong)]">Net pay</span>
+                <span className="text-lg font-semibold text-[color:var(--accent-strong)]">
                   {formatMoney(calculations.netPay)}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-xs text-[#5f6b7a]">
+              <div className="flex items-center justify-between text-xs text-[color:var(--text-secondary)]">
                 <span>Employer SSNIT (13%)</span>
-                <span className="font-semibold text-[#18212b]">
+                <span className="font-semibold text-[color:var(--text-primary)]">
                   {formatMoney(calculations.employerSsnit)}
                 </span>
               </div>
@@ -832,17 +832,17 @@ export default function SalaryCalculatorPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-white/60 bg-white/80 p-6 shadow-card backdrop-blur">
+        <section className="rounded-2xl border border-[color:var(--card-border)] bg-[color:var(--card-bg)] p-6 shadow-card backdrop-blur">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1e5a6a]">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--accent)]">
                 Employees
               </p>
-              <h2 className="text-xl font-semibold text-[#18212b]">
+              <h2 className="text-xl font-semibold text-[color:var(--text-primary)]">
                 Salary Table
               </h2>
             </div>
-            <p className="text-sm text-[#5f6b7a]">
+            <p className="text-sm text-[color:var(--text-secondary)]">
               {entries.length} record{entries.length === 1 ? "" : "s"}
             </p>
           </div>
@@ -850,7 +850,7 @@ export default function SalaryCalculatorPage() {
           <div className="mt-5 overflow-x-auto">
             <table className="min-w-[900px] w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b border-[#e2e8f0] text-left text-xs uppercase tracking-[0.2em] text-[#5f6b7a]">
+                <tr className="border-b border-[color:var(--border-default)] text-left text-xs uppercase tracking-[0.2em] text-[color:var(--text-secondary)]">
                   <th className="py-3 pr-4">Employee</th>
                   <th className="py-3 pr-4">Basic</th>
                   <th className="py-3 pr-4">Allowances</th>
@@ -869,15 +869,15 @@ export default function SalaryCalculatorPage() {
                   <tr>
                     <td
                       colSpan={11}
-                      className="py-6 text-center text-sm text-[#5f6b7a]"
+                      className="py-6 text-center text-sm text-[color:var(--text-secondary)]"
                     >
                       No employees added yet.
                     </td>
                   </tr>
                 ) : (
                   entries.map((entry) => (
-                    <tr key={entry.id} className="border-b border-[#f1f5f9]">
-                      <td className="py-3 pr-4 font-semibold text-[#18212b]">
+                    <tr key={entry.id} className="border-b border-[color:var(--border-subtle)]">
+                      <td className="py-3 pr-4 font-semibold text-[color:var(--text-primary)]">
                         {entry.name}
                       </td>
                       <td className="py-3 pr-4">{formatMoney(entry.basic)}</td>
@@ -887,7 +887,7 @@ export default function SalaryCalculatorPage() {
                       <td className="py-3 pr-4">{formatMoney(entry.paye)}</td>
                       <td className="py-3 pr-4">{formatMoney(entry.loan)}</td>
                       <td className="py-3 pr-4">{formatMoney(entry.totalDeductions)}</td>
-                      <td className="py-3 pr-4 font-semibold text-[#0f3a45]">
+                      <td className="py-3 pr-4 font-semibold text-[color:var(--accent-strong)]">
                         {formatMoney(entry.netPay)}
                       </td>
                       <td className="py-3 pr-4">{formatMoney(entry.employerSsnit)}</td>
@@ -895,7 +895,7 @@ export default function SalaryCalculatorPage() {
                         <button
                           type="button"
                           onClick={() => handleRemoveEntry(entry.id)}
-                          className="rounded-full border border-[#1e5a6a]/30 px-3 py-1 text-xs font-semibold text-[#0f3a45]"
+                          className="rounded-full border border-[color:var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[color:var(--accent-strong)]"
                         >
                           Remove
                         </button>
@@ -908,15 +908,15 @@ export default function SalaryCalculatorPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-white/60 bg-white/80 p-6 shadow-card backdrop-blur">
+        <section className="rounded-2xl border border-[color:var(--card-border)] bg-[color:var(--card-bg)] p-6 shadow-card backdrop-blur">
           <div className="flex flex-col gap-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1e5a6a]">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--accent)]">
               Reverse Calculator
             </p>
-            <h2 className="text-xl font-semibold text-[#18212b]">
+            <h2 className="text-xl font-semibold text-[color:var(--text-primary)]">
               Net Pay → Basic Salary
             </h2>
-            <p className="text-sm text-[#5f6b7a]">
+            <p className="text-sm text-[color:var(--text-secondary)]">
               Enter net pay to estimate the basic salary. Allowances and loan
               deductions are ignored in this reverse calculation.
             </p>
@@ -924,7 +924,7 @@ export default function SalaryCalculatorPage() {
 
           <div className="mt-6 grid gap-4 md:grid-cols-[1fr_1fr_1.2fr]">
             <div>
-              <label className="text-sm font-semibold text-[#1f2933]">
+              <label className="text-sm font-semibold text-[color:var(--text-tertiary)]">
                 Net Pay (GHS)
               </label>
               <input
@@ -934,11 +934,11 @@ export default function SalaryCalculatorPage() {
                 value={reverseNetPay}
                 onChange={(e) => setReverseNetPay(e.target.value)}
                 placeholder="0.00"
-                className="mt-2 w-full rounded-xl border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1f2933] shadow-sm focus:border-[#1e5a6a] focus:outline-none"
+                className="mt-2 w-full rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--text-tertiary)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none"
               />
             </div>
             <div>
-              <label className="text-sm font-semibold text-[#1f2933]">
+              <label className="text-sm font-semibold text-[color:var(--text-tertiary)]">
                 Basic Salary (optional)
               </label>
               <input
@@ -948,53 +948,53 @@ export default function SalaryCalculatorPage() {
                 value={reverseBasic}
                 onChange={(e) => setReverseBasic(e.target.value)}
                 placeholder="Leave blank to assume no allowances"
-                className="mt-2 w-full rounded-xl border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1f2933] shadow-sm focus:border-[#1e5a6a] focus:outline-none"
+                className="mt-2 w-full rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--text-tertiary)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none"
               />
-              <p className="mt-2 text-xs text-[#5f6b7a]">
+              <p className="mt-2 text-xs text-[color:var(--text-secondary)]">
                 If provided, we estimate implied allowances from the net pay.
               </p>
             </div>
 
-            <div className="grid gap-3 rounded-xl border border-[#e2e8f0] bg-white p-4 text-sm">
+            <div className="grid gap-3 rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] p-4 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-[#5f6b7a]">Basic salary</span>
-                <span className="font-semibold text-[#18212b]">
+                <span className="text-[color:var(--text-secondary)]">Basic salary</span>
+                <span className="font-semibold text-[color:var(--text-primary)]">
                   {formatMoney(reverseCalculations.basic)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[#5f6b7a]">Gross salary</span>
-                <span className="font-semibold text-[#18212b]">
+                <span className="text-[color:var(--text-secondary)]">Gross salary</span>
+                <span className="font-semibold text-[color:var(--text-primary)]">
                   {formatMoney(reverseCalculations.gross)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[#5f6b7a]">Implied allowances</span>
-                <span className="font-semibold text-[#18212b]">
+                <span className="text-[color:var(--text-secondary)]">Implied allowances</span>
+                <span className="font-semibold text-[color:var(--text-primary)]">
                   {formatMoney(reverseCalculations.allowances)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[#5f6b7a]">Chargeable income</span>
-                <span className="font-semibold text-[#18212b]">
+                <span className="text-[color:var(--text-secondary)]">Chargeable income</span>
+                <span className="font-semibold text-[color:var(--text-primary)]">
                   {formatMoney(reverseCalculations.chargeable)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[#5f6b7a]">Employee SSNIT (5.5%)</span>
-                <span className="font-semibold text-[#18212b]">
+                <span className="text-[color:var(--text-secondary)]">Employee SSNIT (5.5%)</span>
+                <span className="font-semibold text-[color:var(--text-primary)]">
                   {formatMoney(reverseCalculations.employeeSsnit)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[#5f6b7a]">PAYE</span>
-                <span className="font-semibold text-[#18212b]">
+                <span className="text-[color:var(--text-secondary)]">PAYE</span>
+                <span className="font-semibold text-[color:var(--text-primary)]">
                   {formatMoney(reverseCalculations.paye)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[#5f6b7a]">Employer SSNIT (13%)</span>
-                <span className="font-semibold text-[#18212b]">
+                <span className="text-[color:var(--text-secondary)]">Employer SSNIT (13%)</span>
+                <span className="font-semibold text-[color:var(--text-primary)]">
                   {formatMoney(reverseCalculations.employerSsnit)}
                 </span>
               </div>
@@ -1002,28 +1002,28 @@ export default function SalaryCalculatorPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-white/60 bg-white/80 p-6 shadow-card backdrop-blur">
+        <section className="rounded-2xl border border-[color:var(--card-border)] bg-[color:var(--card-bg)] p-6 shadow-card backdrop-blur">
           <div className="flex flex-col gap-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1e5a6a]">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--accent)]">
               Reports
             </p>
-            <h2 className="text-xl font-semibold text-[#18212b]">
+            <h2 className="text-xl font-semibold text-[color:var(--text-primary)]">
               Export Payroll, PAYE, and SSNIT
             </h2>
-            <p className="text-sm text-[#5f6b7a]">
+            <p className="text-sm text-[color:var(--text-secondary)]">
               Generate a report for the current table in PDF, CSV, or JSON.
             </p>
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end">
             <div>
-              <label className="text-sm font-semibold text-[#1f2933]">
+              <label className="text-sm font-semibold text-[color:var(--text-tertiary)]">
                 Report Type
               </label>
               <select
                 value={reportType}
                 onChange={(e) => setReportType(e.target.value as ReportType)}
-                className="mt-2 w-full rounded-xl border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1f2933] shadow-sm focus:border-[#1e5a6a] focus:outline-none"
+                className="mt-2 w-full rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--text-tertiary)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none"
               >
                 <option value="payroll">Payroll report</option>
                 <option value="paye">PAYE report</option>
@@ -1033,13 +1033,13 @@ export default function SalaryCalculatorPage() {
               </select>
             </div>
             <div>
-              <label className="text-sm font-semibold text-[#1f2933]">
+              <label className="text-sm font-semibold text-[color:var(--text-tertiary)]">
                 File Format
               </label>
               <select
                 value={reportFormat}
                 onChange={(e) => setReportFormat(e.target.value as ReportFormat)}
-                className="mt-2 w-full rounded-xl border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1f2933] shadow-sm focus:border-[#1e5a6a] focus:outline-none"
+                className="mt-2 w-full rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--text-tertiary)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none"
               >
                 <option value="pdf">PDF</option>
                 <option value="csv">CSV</option>
@@ -1049,31 +1049,31 @@ export default function SalaryCalculatorPage() {
             <button
               type="button"
               onClick={handleExport}
-              className="inline-flex items-center justify-center rounded-full border border-[#1e5a6a]/30 px-6 py-3 text-sm font-semibold text-[#0f3a45]"
+              className="inline-flex items-center justify-center rounded-full border border-[color:var(--accent-soft)] px-6 py-3 text-sm font-semibold text-[color:var(--accent-strong)]"
             >
               Download
             </button>
           </div>
 
-          <div className="mt-6 rounded-xl border border-[#e2e8f0] bg-white p-4">
+          <div className="mt-6 rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-[#18212b]">
+              <p className="text-sm font-semibold text-[color:var(--text-primary)]">
                 {previewReport.title} Preview
               </p>
-              <p className="text-xs text-[#5f6b7a]">
+              <p className="text-xs text-[color:var(--text-secondary)]">
                 {entries.length} record{entries.length === 1 ? "" : "s"}
               </p>
             </div>
 
             {entries.length === 0 ? (
-              <p className="mt-3 text-sm text-[#5f6b7a]">
+              <p className="mt-3 text-sm text-[color:var(--text-secondary)]">
                 Add employees to see the report preview.
               </p>
             ) : (
               <div className="mt-4 overflow-x-auto">
                 <table className="min-w-[900px] w-full border-collapse text-sm">
                   <thead>
-                    <tr className="border-b border-[#e2e8f0] text-left text-xs uppercase tracking-[0.18em] text-[#5f6b7a]">
+                    <tr className="border-b border-[color:var(--border-default)] text-left text-xs uppercase tracking-[0.18em] text-[color:var(--text-secondary)]">
                       {previewReport.headers.map((header) => (
                         <th key={header} className="py-3 pr-4">
                           {header}
@@ -1083,7 +1083,7 @@ export default function SalaryCalculatorPage() {
                   </thead>
                   <tbody>
                     {previewReport.rows.map((row, rowIndex) => (
-                      <tr key={`preview-${rowIndex}`} className="border-b border-[#f1f5f9]">
+                      <tr key={`preview-${rowIndex}`} className="border-b border-[color:var(--border-subtle)]">
                         {row.map((cell, cellIndex) => (
                           <td key={`preview-${rowIndex}-${cellIndex}`} className="py-3 pr-4">
                             {typeof cell === "number" ? formatMoney(cell) : String(cell)}

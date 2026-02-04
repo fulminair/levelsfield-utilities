@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import ThemeToggle from "@/components/theme-toggle";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -20,7 +21,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${spaceGrotesk.variable} font-sans`}>{children}</body>
+      <body className={`${spaceGrotesk.variable} font-sans`}>
+        <ThemeToggle />
+        {children}
+      </body>
     </html>
   );
 }
