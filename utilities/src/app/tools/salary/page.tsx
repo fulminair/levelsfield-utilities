@@ -759,6 +759,12 @@ export default function SalaryCalculatorPage() {
 
             <div className="mt-6 grid gap-3">
               <div className="flex items-center justify-between text-sm">
+                <span className="text-[#5f6b7a]">Basic salary</span>
+                <span className="font-semibold text-[#18212b]">
+                  {formatMoney(calculations.basic)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
                 <span className="text-[#5f6b7a]">Allowances total</span>
                 <span className="font-semibold text-[#18212b]">
                   {formatMoney(calculations.allowances)}
