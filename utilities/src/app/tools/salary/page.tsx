@@ -493,6 +493,8 @@ export default function SalaryCalculatorPage() {
     await exportPdf(report.title, report.headers, report.rows, report.filename);
   };
 
+  const previewReport = buildReport(reportType);
+
   return (
     <main className="min-h-screen px-6 py-12 md:px-10">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
@@ -933,6 +935,48 @@ export default function SalaryCalculatorPage() {
             >
               Download
             </button>
+          </div>
+
+          <div className="mt-6 rounded-xl border border-[#e2e8f0] bg-white p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-[#18212b]">
+                {previewReport.title} Preview
+              </p>
+              <p className="text-xs text-[#5f6b7a]">
+                {entries.length} record{entries.length === 1 ? "" : "s"}
+              </p>
+            </div>
+
+            {entries.length === 0 ? (
+              <p className="mt-3 text-sm text-[#5f6b7a]">
+                Add employees to see the report preview.
+              </p>
+            ) : (
+              <div className="mt-4 overflow-x-auto">
+                <table className="min-w-[900px] w-full border-collapse text-sm">
+                  <thead>
+                    <tr className="border-b border-[#e2e8f0] text-left text-xs uppercase tracking-[0.18em] text-[#5f6b7a]">
+                      {previewReport.headers.map((header) => (
+                        <th key={header} className="py-3 pr-4">
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {previewReport.rows.map((row, rowIndex) => (
+                      <tr key={`preview-${rowIndex}`} className="border-b border-[#f1f5f9]">
+                        {row.map((cell, cellIndex) => (
+                          <td key={`preview-${rowIndex}-${cellIndex}`} className="py-3 pr-4">
+                            {typeof cell === "number" ? formatMoney(cell) : String(cell)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </section>
       </div>
