@@ -75,7 +75,7 @@ type SalaryEntry = {
   employerSsnit: number;
 };
 
-type ReportType = "payroll" | "paye" | "ssnit";
+type ReportType = "payroll" | "paye" | "ssnit" | "ssnit-tier1" | "ssnit-tier2";
 type ReportFormat = "pdf" | "csv" | "json";
 
 type PayeBracket = {
@@ -362,10 +362,61 @@ export default function SalaryCalculatorPage() {
       };
     }
 
+    if (type === "ssnit-tier1") {
+      return {
+        title: "SSNIT Tier 1 Report",
+        filename: `ssnit-tier1-report-${dateStamp}`,
+        headers: ["Employee", "Basic Salary", "Tier 1 Employer (5%)"],
+        rows: entries.map((entry) => [
+          entry.name,
+          roundMoney(entry.basic),
+          roundMoney(entry.basic * EMPLOYER_TIER1_RATE)
+        ]),
+        json: entries.map((entry) => ({
+          employee: entry.name,
+          basic_salary: roundMoney(entry.basic),
+          tier_1_employer: roundMoney(entry.basic * EMPLOYER_TIER1_RATE)
+        }))
+      };
+    }
+
+    if (type === "ssnit-tier2") {
+      return {
+        title: "SSNIT Tier 2 Report",
+        filename: `ssnit-tier2-report-${dateStamp}`,
+        headers: [
+          "Employee",
+          "Basic Salary",
+          "Tier 2 Employee (5.5%)",
+          "Tier 2 Employer (8%)",
+          "Tier 2 Total (13.5%)"
+        ],
+        rows: entries.map((entry) => {
+          const tier2Employee = roundMoney(entry.basic * EMPLOYEE_SSNIT_RATE);
+          const tier2Employer = roundMoney(entry.basic * EMPLOYER_TIER2_RATE);
+          const tier2Total = roundMoney(entry.basic * TIER2_TOTAL_RATE);
+          return [
+            entry.name,
+            roundMoney(entry.basic),
+            tier2Employee,
+            tier2Employer,
+            tier2Total
+          ];
+        }),
+        json: entries.map((entry) => ({
+          employee: entry.name,
+          basic_salary: roundMoney(entry.basic),
+          tier_2_employee: roundMoney(entry.basic * EMPLOYEE_SSNIT_RATE),
+          tier_2_employer: roundMoney(entry.basic * EMPLOYER_TIER2_RATE),
+          tier_2_total: roundMoney(entry.basic * TIER2_TOTAL_RATE)
+        }))
+      };
+    }
+
     if (type === "ssnit") {
       return {
-        title: "SSNIT Report",
-        filename: `ssnit-report-${dateStamp}`,
+        title: "SSNIT Summary Report",
+        filename: `ssnit-summary-report-${dateStamp}`,
         headers: [
           "Employee",
           "Basic Salary",
@@ -931,7 +982,9 @@ export default function SalaryCalculatorPage() {
               >
                 <option value="payroll">Payroll report</option>
                 <option value="paye">PAYE report</option>
-                <option value="ssnit">SSNIT report</option>
+                <option value="ssnit">SSNIT summary</option>
+                <option value="ssnit-tier1">SSNIT Tier 1</option>
+                <option value="ssnit-tier2">SSNIT Tier 2</option>
               </select>
             </div>
             <div>
