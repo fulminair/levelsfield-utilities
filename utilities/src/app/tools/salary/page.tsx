@@ -127,6 +127,7 @@ export default function SalaryCalculatorPage() {
   const [reportType, setReportType] = useState<ReportType>("payroll");
   const [reportFormat, setReportFormat] = useState<ReportFormat>("pdf");
   const [reverseNetPay, setReverseNetPay] = useState<string>("");
+  const [reverseBasic, setReverseBasic] = useState<string>("");
   const summaryRef = useRef<HTMLDivElement | null>(null);
 
   const calculations = useMemo(() => {
@@ -165,6 +166,7 @@ export default function SalaryCalculatorPage() {
     if (!net) {
       return {
         basic: 0,
+        allowances: 0,
         gross: 0,
         chargeable: 0,
         paye: 0,
@@ -175,14 +177,22 @@ export default function SalaryCalculatorPage() {
     }
 
     const chargeable = calculateChargeableFromNet(net);
-    const gross = chargeable / (1 - EMPLOYEE_SSNIT_RATE);
-    const basic = gross;
-    const employeeSsnit = basic * EMPLOYEE_SSNIT_RATE;
+    const inputBasic = toNumber(reverseBasic);
+    const baseForSsnit = inputBasic > 0 ? inputBasic : 0;
+    const employeeSsnit =
+      baseForSsnit > 0 ? baseForSsnit * EMPLOYEE_SSNIT_RATE : 0;
+    const gross =
+      baseForSsnit > 0
+        ? chargeable + employeeSsnit
+        : chargeable / (1 - EMPLOYEE_SSNIT_RATE);
+    const basic = baseForSsnit > 0 ? baseForSsnit : gross;
+    const allowances = roundMoney(gross - basic);
     const paye = calculatePaye(chargeable);
     const employerSsnit = basic * EMPLOYER_SSNIT_RATE;
 
     return {
       basic: roundMoney(basic),
+      allowances,
       gross: roundMoney(gross),
       chargeable: roundMoney(chargeable),
       paye: roundMoney(paye),
@@ -190,7 +200,7 @@ export default function SalaryCalculatorPage() {
       employerSsnit: roundMoney(employerSsnit),
       netPay: roundMoney(net)
     };
-  }, [reverseNetPay]);
+  }, [reverseNetPay, reverseBasic]);
 
   const updateField = (field: keyof SalaryForm, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -912,7 +922,7 @@ export default function SalaryCalculatorPage() {
             </p>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-[1fr_1.2fr]">
+          <div className="mt-6 grid gap-4 md:grid-cols-[1fr_1fr_1.2fr]">
             <div>
               <label className="text-sm font-semibold text-[#1f2933]">
                 Net Pay (GHS)
@@ -927,12 +937,41 @@ export default function SalaryCalculatorPage() {
                 className="mt-2 w-full rounded-xl border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1f2933] shadow-sm focus:border-[#1e5a6a] focus:outline-none"
               />
             </div>
+            <div>
+              <label className="text-sm font-semibold text-[#1f2933]">
+                Basic Salary (optional)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={reverseBasic}
+                onChange={(e) => setReverseBasic(e.target.value)}
+                placeholder="Leave blank to assume no allowances"
+                className="mt-2 w-full rounded-xl border border-[#e2e8f0] bg-white px-3 py-2 text-sm text-[#1f2933] shadow-sm focus:border-[#1e5a6a] focus:outline-none"
+              />
+              <p className="mt-2 text-xs text-[#5f6b7a]">
+                If provided, we estimate implied allowances from the net pay.
+              </p>
+            </div>
 
             <div className="grid gap-3 rounded-xl border border-[#e2e8f0] bg-white p-4 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-[#5f6b7a]">Basic / Gross salary</span>
+                <span className="text-[#5f6b7a]">Basic salary</span>
                 <span className="font-semibold text-[#18212b]">
                   {formatMoney(reverseCalculations.basic)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[#5f6b7a]">Gross salary</span>
+                <span className="font-semibold text-[#18212b]">
+                  {formatMoney(reverseCalculations.gross)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[#5f6b7a]">Implied allowances</span>
+                <span className="font-semibold text-[#18212b]">
+                  {formatMoney(reverseCalculations.allowances)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
