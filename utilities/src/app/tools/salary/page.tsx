@@ -10,8 +10,11 @@ const currencyFormatter = new Intl.NumberFormat("en-GH", {
   maximumFractionDigits: 2
 });
 
-const EMPLOYEE_SSNIT_RATE = 0.05;
-const EMPLOYER_SSNIT_RATE = 0.135;
+const EMPLOYEE_SSNIT_RATE = 0.055;
+const EMPLOYER_TIER1_RATE = 0.05;
+const EMPLOYER_TIER2_RATE = 0.08;
+const EMPLOYER_SSNIT_RATE = EMPLOYER_TIER1_RATE + EMPLOYER_TIER2_RATE;
+const TIER2_TOTAL_RATE = EMPLOYEE_SSNIT_RATE + EMPLOYER_TIER2_RATE;
 
 const toNumber = (value: string) => {
   if (!value) return 0;
@@ -237,13 +240,13 @@ export default function SalaryCalculatorPage() {
       `Other allowance: ${formatMoney(toNumber(form.others))}`,
       `Allowances total: ${formatMoney(calculations.allowances)}`,
       `Gross pay: ${formatMoney(calculations.gross)}`,
-      `Employee SSNIT Tier 1 (5%): ${formatMoney(calculations.employeeSsnit)}`,
+      `Employee SSNIT (5.5%): ${formatMoney(calculations.employeeSsnit)}`,
       `Chargeable income: ${formatMoney(calculations.chargeable)}`,
       `PAYE: ${formatMoney(calculations.paye)}`,
       `Loan deductions: ${formatMoney(calculations.loan)}`,
       `Total deductions: ${formatMoney(calculations.totalDeductions)}`,
       `Net pay: ${formatMoney(calculations.netPay)}`,
-      `Employer SSNIT Tier 2 (13.5%): ${formatMoney(calculations.employerSsnit)}`
+      `Employer SSNIT (13%): ${formatMoney(calculations.employerSsnit)}`
     ];
     return lines.join("\n");
   };
@@ -363,18 +366,35 @@ export default function SalaryCalculatorPage() {
       return {
         title: "SSNIT Report",
         filename: `ssnit-report-${dateStamp}`,
-        headers: ["Employee", "Basic Salary", "SSNIT Tier 1 (5%)", "SSNIT Tier 2 (13.5%)"],
-        rows: entries.map((entry) => [
-          entry.name,
-          roundMoney(entry.basic),
-          roundMoney(entry.employeeSsnit),
-          roundMoney(entry.employerSsnit)
-        ]),
+        headers: [
+          "Employee",
+          "Basic Salary",
+          "Tier 1 Employer (5%)",
+          "Tier 2 Employee (5.5%)",
+          "Tier 2 Employer (8%)",
+          "Tier 2 Total (13.5%)"
+        ],
+        rows: entries.map((entry) => {
+          const tier1 = roundMoney(entry.basic * EMPLOYER_TIER1_RATE);
+          const tier2Employee = roundMoney(entry.basic * EMPLOYEE_SSNIT_RATE);
+          const tier2Employer = roundMoney(entry.basic * EMPLOYER_TIER2_RATE);
+          const tier2Total = roundMoney(entry.basic * TIER2_TOTAL_RATE);
+          return [
+            entry.name,
+            roundMoney(entry.basic),
+            tier1,
+            tier2Employee,
+            tier2Employer,
+            tier2Total
+          ];
+        }),
         json: entries.map((entry) => ({
           employee: entry.name,
           basic_salary: roundMoney(entry.basic),
-          ssnit_tier_1: roundMoney(entry.employeeSsnit),
-          ssnit_tier_2: roundMoney(entry.employerSsnit)
+          tier_1_employer: roundMoney(entry.basic * EMPLOYER_TIER1_RATE),
+          tier_2_employee: roundMoney(entry.basic * EMPLOYEE_SSNIT_RATE),
+          tier_2_employer: roundMoney(entry.basic * EMPLOYER_TIER2_RATE),
+          tier_2_total: roundMoney(entry.basic * TIER2_TOTAL_RATE)
         }))
       };
     }
@@ -387,12 +407,12 @@ export default function SalaryCalculatorPage() {
         "Basic Salary",
         "Allowances",
         "Gross Pay",
-        "SSNIT Tier 1 (5%)",
+        "SSNIT Employee (5.5%)",
         "PAYE",
         "Loan",
         "Total Deductions",
         "Net Pay",
-        "SSNIT Tier 2 (13.5%)"
+        "SSNIT Employer (13%)"
       ],
       rows: entries.map((entry) => [
         entry.name,
@@ -411,12 +431,12 @@ export default function SalaryCalculatorPage() {
         basic_salary: roundMoney(entry.basic),
         allowances: roundMoney(entry.allowances),
         gross_pay: roundMoney(entry.gross),
-        ssnit_tier_1: roundMoney(entry.employeeSsnit),
+        ssnit_employee: roundMoney(entry.employeeSsnit),
         paye: roundMoney(entry.paye),
         loan: roundMoney(entry.loan),
         total_deductions: roundMoney(entry.totalDeductions),
         net_pay: roundMoney(entry.netPay),
-        ssnit_tier_2: roundMoney(entry.employerSsnit)
+        ssnit_employer: roundMoney(entry.employerSsnit)
       }))
     };
   };
@@ -506,8 +526,8 @@ export default function SalaryCalculatorPage() {
             Salary Calculator
           </h1>
           <p className="max-w-3xl text-sm text-[#5f6b7a] md:text-base">
-            Ghana PAYE (2024) with SSNIT Tier 1 (5%) employee deductions and Tier 2
-            (13.5%) employer contribution. Enter pay details below and add each
+            Ghana PAYE (2024) with SSNIT 5.5% employee deductions and 13% employer
+            contribution. Enter pay details below and add each
             employee to the table.
           </p>
         </header>
@@ -700,7 +720,7 @@ export default function SalaryCalculatorPage() {
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[#5f6b7a]">Employee SSNIT Tier 1 (5%)</span>
+                <span className="text-[#5f6b7a]">Employee SSNIT (5.5%)</span>
                 <span className="font-semibold text-[#18212b]">
                   {formatMoney(calculations.employeeSsnit)}
                 </span>
@@ -736,7 +756,7 @@ export default function SalaryCalculatorPage() {
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs text-[#5f6b7a]">
-                <span>Employer SSNIT Tier 2 (13.5%)</span>
+                <span>Employer SSNIT (13%)</span>
                 <span className="font-semibold text-[#18212b]">
                   {formatMoney(calculations.employerSsnit)}
                 </span>
@@ -768,12 +788,12 @@ export default function SalaryCalculatorPage() {
                   <th className="py-3 pr-4">Basic</th>
                   <th className="py-3 pr-4">Allowances</th>
                   <th className="py-3 pr-4">Gross</th>
-                  <th className="py-3 pr-4">SSNIT Tier 1 (5%)</th>
+                  <th className="py-3 pr-4">SSNIT Employee (5.5%)</th>
                   <th className="py-3 pr-4">PAYE</th>
                   <th className="py-3 pr-4">Loan</th>
                   <th className="py-3 pr-4">Deductions</th>
                   <th className="py-3 pr-4">Net Pay</th>
-                  <th className="py-3 pr-4">SSNIT Tier 2 (13.5%)</th>
+                  <th className="py-3 pr-4">SSNIT Employer (13%)</th>
                   <th className="py-3 text-right">Action</th>
                 </tr>
               </thead>
@@ -865,7 +885,7 @@ export default function SalaryCalculatorPage() {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[#5f6b7a]">Employee SSNIT Tier 1 (5%)</span>
+                <span className="text-[#5f6b7a]">Employee SSNIT (5.5%)</span>
                 <span className="font-semibold text-[#18212b]">
                   {formatMoney(reverseCalculations.employeeSsnit)}
                 </span>
@@ -877,7 +897,7 @@ export default function SalaryCalculatorPage() {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[#5f6b7a]">Employer SSNIT Tier 2 (13.5%)</span>
+                <span className="text-[#5f6b7a]">Employer SSNIT (13%)</span>
                 <span className="font-semibold text-[#18212b]">
                   {formatMoney(reverseCalculations.employerSsnit)}
                 </span>
