@@ -1,0 +1,2337 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GHS Cash Counter</title>
+  <style>
+    :root {
+      --bg: #f1efe9;
+      --bg-2: #e6ecef;
+      --card: #ffffff;
+      --text: #1b2430;
+      --muted: #5b6470;
+      --border: #d6d0c8;
+      --accent: #0f766e;
+      --accent-2: #b45309;
+      --success: #15803d;
+      --danger: #b42318;
+      --shadow: 0 10px 30px rgba(12, 20, 24, 0.08);
+      --input-bg: #fbfaf7;
+    }
+
+    body.dark {
+      --bg: #0f1216;
+      --bg-2: #101921;
+      --card: #151b22;
+      --text: #e9edf2;
+      --muted: #a7b0bb;
+      --border: #233040;
+      --accent: #2dd4bf;
+      --accent-2: #f59e0b;
+      --success: #22c55e;
+      --danger: #f87171;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      --input-bg: #10161d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Avenir Next", "Avenir", "Gill Sans", "Trebuchet MS", "Candara", sans-serif;
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(circle at 15% 20%, rgba(15, 118, 110, 0.08), transparent 42%),
+        radial-gradient(circle at 85% 0%, rgba(180, 83, 9, 0.08), transparent 45%),
+        repeating-linear-gradient(130deg, rgba(0, 0, 0, 0.02) 0 1px, transparent 1px 7px);
+      min-height: 100vh;
+      padding-bottom: 7.5rem;
+    }
+
+    body.dark {
+      background-image:
+        radial-gradient(circle at 15% 20%, rgba(45, 212, 191, 0.12), transparent 45%),
+        radial-gradient(circle at 85% 0%, rgba(245, 158, 11, 0.12), transparent 50%),
+        repeating-linear-gradient(130deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 7px);
+    }
+
+    h1, h2, h3 {
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    p {
+      margin: 0.35rem 0 0;
+      color: var(--muted);
+    }
+
+    .page {
+      width: min(1200px, 92vw);
+      margin: 1.5rem auto 2rem;
+      display: grid;
+      gap: 1.3rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 1.2rem;
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .hero-text {
+      max-width: 540px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      background: rgba(15, 118, 110, 0.12);
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      align-items: center;
+    }
+
+    .info-grid,
+    .controls-grid,
+    .totals-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .info-grid {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .controls-grid {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      align-items: end;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      padding: 0.6rem 0.75rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--input-bg);
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+    }
+
+    .inline-input {
+      display: flex;
+      gap: 0.6rem;
+      align-items: center;
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .btn {
+      background: var(--accent);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.55rem 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.2s, background 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(12, 20, 24, 0.15);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn.ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+
+    .btn.danger {
+      background: var(--danger);
+    }
+
+    .btn.tiny {
+      padding: 0.35rem 0.55rem;
+      font-size: 0.78rem;
+      border-radius: 8px;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .switch input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .slider {
+      width: 44px;
+      height: 24px;
+      background: var(--border);
+      border-radius: 999px;
+      position: relative;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .slider::after {
+      content: "";
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ffffff;
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      transition: transform 0.2s;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .switch input:checked + .slider {
+      background: var(--accent);
+    }
+
+    .switch input:checked + .slider::after {
+      transform: translateX(20px);
+    }
+
+    .switch-label {
+      white-space: nowrap;
+    }
+
+    .inline-switch {
+      justify-content: flex-start;
+      padding-top: 1.2rem;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .denom-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+      min-width: 620px;
+    }
+
+    .denom-table th,
+    .denom-table td {
+      padding: 0.7rem 0.5rem;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .denom-table th {
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .denom-table .num {
+      text-align: right;
+    }
+
+    .denom-cell {
+      font-weight: 600;
+    }
+
+    .count-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      align-items: flex-start;
+    }
+
+    .count-controls input {
+      width: 100%;
+      min-width: 90px;
+    }
+
+    .quick-buttons {
+      display: flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+    }
+
+    .custom-inc {
+      display: inline-flex;
+      gap: 0.35rem;
+      align-items: center;
+    }
+
+    .custom-inc-input {
+      width: 72px;
+      padding: 0.35rem 0.45rem;
+      font-size: 0.78rem;
+    }
+
+    .bundle-val {
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .row-total {
+      font-weight: 700;
+    }
+
+    .row-active {
+      background: rgba(15, 118, 110, 0.08);
+    }
+
+    body.dark .row-active {
+      background: rgba(45, 212, 191, 0.16);
+    }
+
+    .capture-root {
+      font-family: "Avenir Next", "Avenir", "Gill Sans", "Trebuchet MS", "Candara", sans-serif;
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .capture-root.dark .row-active {
+      background: rgba(45, 212, 191, 0.16);
+    }
+
+    .bundle-off .denom-table .bundle-col {
+      display: none;
+    }
+
+    .table-foot {
+      margin-top: 0.8rem;
+    }
+
+    .totals-card {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .totals-grid {
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+
+    .totals-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .totals-item strong {
+      font-size: 1.05rem;
+    }
+
+    .grand-total {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+      padding-top: 0.8rem;
+    }
+
+    .grand-total strong {
+      font-size: 1.8rem;
+      color: var(--accent);
+    }
+
+    .diff {
+      font-weight: 700;
+    }
+
+    .diff.positive {
+      color: var(--success);
+    }
+
+    .diff.negative {
+      color: var(--danger);
+    }
+
+    .diff.neutral {
+      color: var(--muted);
+    }
+
+    .history-card h2 {
+      font-size: 1.2rem;
+    }
+
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .history-item {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem;
+      background: var(--bg-2);
+      display: grid;
+      gap: 0.8rem;
+    }
+
+    .history-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .history-meta {
+      display: grid;
+      gap: 0.3rem;
+    }
+
+    .history-time {
+      font-weight: 700;
+    }
+
+    .history-line {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .history-total {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .history-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .history-empty {
+      font-size: 0.9rem;
+      color: var(--muted);
+      padding: 0.6rem 0.2rem;
+    }
+
+    .sticky-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.12);
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .sticky-total {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .sticky-total strong {
+      font-size: 1.4rem;
+      color: var(--accent);
+    }
+
+    .sticky-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .sticky-options {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      font-size: 0.85rem;
+      color: var(--muted);
+      min-width: 120px;
+    }
+
+    .status[data-tone="success"] {
+      color: var(--success);
+    }
+
+    .status[data-tone="danger"] {
+      color: var(--danger);
+    }
+
+    .report-view {
+      position: fixed;
+      left: -9999px;
+      top: 0;
+      width: min(900px, 94vw);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .report-card {
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 1.6rem;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 1.2rem;
+      overflow-x: hidden;
+      min-width: 0;
+    }
+
+    .report-card.bundle-hidden .bundle-col {
+      display: none;
+    }
+
+    .report-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .report-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .report-subtitle {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .report-meta {
+      font-size: 0.85rem;
+      color: var(--muted);
+      display: grid;
+      gap: 0.2rem;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .report-meta .is-empty {
+      display: none;
+    }
+
+    .report-card,
+    .snapshot-modal,
+    .report {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    .report-table-wrap {
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+      table-layout: fixed;
+    }
+
+    .report-table th,
+    .report-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .report-table th {
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .report-table .num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      align-items: start;
+      width: 100%;
+    }
+
+    .metric {
+      min-width: 0;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .metric .value {
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .metric .value.diff.positive,
+    .diff.positive {
+      color: var(--success);
+    }
+
+    .metric .value.diff.negative,
+    .diff.negative {
+      color: var(--danger);
+    }
+
+    .metric .value.diff.neutral {
+      color: var(--muted);
+    }
+
+    .report-grand {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+      padding-top: 0.8rem;
+    }
+
+    .grand-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .grand-total-row .amount {
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .report-grand strong,
+    .grand-total-row .amount {
+      font-size: 1.6rem;
+      color: var(--accent);
+    }
+
+    .report-watermark {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .report-footer {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 200;
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 1rem 1.2rem 1.4rem;
+      width: min(960px, 95vw);
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.6rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 900px) {
+      .count-controls {
+        align-items: stretch;
+      }
+
+      .count-controls input {
+        min-width: 0;
+      }
+
+      .sticky-bar {
+        padding-bottom: 1rem;
+      }
+    }
+
+    @media (min-width: 900px) {
+      .count-controls {
+        flex-direction: row;
+        align-items: center;
+      }
+
+      .count-controls input {
+        width: 90px;
+      }
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+        padding-bottom: 0;
+      }
+
+      .modal-header,
+      .modal-actions,
+      #modalClose,
+      #modalPrint {
+        display: none !important;
+      }
+
+      .app,
+      .sticky-bar {
+        display: none !important;
+      }
+
+      .report-view {
+        display: block !important;
+        position: static;
+        width: auto;
+        opacity: 1;
+        pointer-events: auto;
+        padding: 0;
+      }
+
+      body.modal-open .report-view {
+        display: none !important;
+      }
+
+      body.modal-open .modal {
+        display: block !important;
+        position: static;
+        background: transparent;
+        padding: 0;
+      }
+
+      .modal-content {
+        box-shadow: none;
+        border: none;
+        padding: 0;
+      }
+
+      .report-card {
+        box-shadow: none;
+        border: 1px solid #e5e7eb;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app page">
+    <header class="card hero">
+      <div class="hero-text">
+        <span class="badge">Offline-ready</span>
+        <h1>GHS Cash Counter</h1>
+        <p>Count Ghana cedi notes and coins, then share totals fast.</p>
+      </div>
+      <div class="hero-actions">
+        <label class="switch">
+          <input type="checkbox" id="darkToggle" />
+          <span class="slider"></span>
+          <span class="switch-label">Dark mode</span>
+        </label>
+        <label class="switch">
+          <input type="checkbox" id="bundleToggle" />
+          <span class="slider"></span>
+          <span class="switch-label">Show bundle values</span>
+        </label>
+      </div>
+    </header>
+
+    <section class="card info-grid">
+      <div class="field">
+        <label for="cashierName">Cashier name</label>
+        <input id="cashierName" type="text" placeholder="e.g., Abena" />
+      </div>
+      <div class="field">
+        <label for="branchName">Branch</label>
+        <input id="branchName" type="text" placeholder="e.g., Madina" />
+      </div>
+      <div class="field">
+        <label for="reference">Reference (optional)</label>
+        <input id="reference" type="text" placeholder="e.g., Shift A" />
+      </div>
+      <div class="field">
+        <label for="expectedAmount">Expected amount (GH₵)</label>
+        <input id="expectedAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" />
+      </div>
+    </section>
+
+    <section class="card controls">
+      <div class="controls-grid">
+        <div class="field">
+          <label for="addDenomInput">Add denomination (GH₵)</label>
+          <div class="inline-input">
+            <input id="addDenomInput" type="number" min="0" step="0.01" inputmode="decimal" placeholder="e.g., 25" />
+            <button id="addDenomBtn" class="btn" type="button">Add</button>
+          </div>
+          <div id="denomError" class="hint"></div>
+        </div>
+        <div class="field">
+          <label for="bundleSize">Bundle size (notes)</label>
+          <input id="bundleSize" type="number" min="1" step="1" value="100" inputmode="numeric" />
+          <div class="hint">Shows value per denom when bundle toggle is on.</div>
+        </div>
+        <label class="switch inline-switch">
+          <input type="checkbox" id="removeDefaultToggle" />
+          <span class="slider"></span>
+          <span class="switch-label">Allow removing default rows</span>
+        </label>
+      </div>
+    </section>
+
+    <section class="card table-card">
+      <div class="table-wrap">
+        <table class="denom-table">
+          <thead>
+            <tr>
+              <th>Denomination</th>
+              <th>Count</th>
+              <th class="bundle-col">Bundle value</th>
+              <th class="num">Row total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="denomBody"></tbody>
+        </table>
+      </div>
+      <div class="table-foot">
+        <span class="hint">Tip: Use Up/Down arrows to move rows, Enter to save history.</span>
+      </div>
+    </section>
+
+    <section class="card totals-card">
+      <div class="totals-grid">
+        <div class="totals-item">
+          <span>Notes subtotal</span>
+          <strong id="notesSubtotal">GH₵0.00</strong>
+        </div>
+        <div class="totals-item">
+          <span>Coins subtotal</span>
+          <strong id="coinsSubtotal">GH₵0.00</strong>
+        </div>
+        <div class="totals-item">
+          <span>Total pieces</span>
+          <strong id="piecesTotal">0</strong>
+        </div>
+        <div class="totals-item">
+          <span>Expected</span>
+          <strong id="expectedDisplay">GH₵0.00</strong>
+        </div>
+        <div class="totals-item">
+          <span>Difference</span>
+          <strong id="differenceDisplay" class="diff neutral">GH₵0.00</strong>
+        </div>
+        <div class="totals-item">
+          <span>Last saved total</span>
+          <strong id="lastSavedTotal">GH₵0.00</strong>
+        </div>
+        <div class="totals-item">
+          <span>Delta vs last save</span>
+          <strong id="deltaDisplay" class="diff neutral">GH₵0.00</strong>
+        </div>
+      </div>
+      <div class="grand-total">
+        <span>Grand total</span>
+        <strong id="grandTotal">GH₵0.00</strong>
+      </div>
+    </section>
+
+    <section class="card history-card">
+      <div class="history-header">
+        <h2>History</h2>
+        <button id="clearHistory" class="btn danger" type="button">Clear all history</button>
+      </div>
+      <div id="historyList" class="history-list"></div>
+    </section>
+  </main>
+
+  <section id="reportView" class="report-view report"></section>
+
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal-content snapshot-modal">
+      <div class="modal-header">
+        <h3>Saved snapshot</h3>
+        <div class="modal-actions">
+          <button id="modalPrint" class="btn" type="button">Print/PDF</button>
+          <button id="modalClose" class="btn ghost" type="button">Close</button>
+        </div>
+      </div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <div class="sticky-bar">
+    <div class="sticky-total">
+      <span>Grand total</span>
+      <strong id="stickyTotal">GH₵0.00</strong>
+    </div>
+    <div class="sticky-actions">
+      <button id="resetCounts" class="btn ghost" type="button">Reset counts</button>
+      <button id="saveHistory" class="btn" type="button">Save to history</button>
+      <button id="copySummary" class="btn ghost" type="button">Copy Summary</button>
+      <button id="copyWhatsApp" class="btn" type="button">Copy WhatsApp</button>
+      <button id="copyBreakdown" class="btn ghost" type="button">Copy Breakdown</button>
+      <button id="copySnapshot" class="btn ghost" type="button">Copy snapshot</button>
+      <button id="printBtn" class="btn ghost" type="button">Print/PDF</button>
+    </div>
+    <div class="sticky-options">
+      <label class="switch">
+        <input type="checkbox" id="includeZerosToggle" />
+        <span class="slider"></span>
+        <span class="switch-label">Include zero rows</span>
+      </label>
+    </div>
+    <div id="statusMsg" class="status" data-tone="neutral"></div>
+  </div>
+
+  <template id="reportTemplate">
+    <div class="report-card">
+      <div class="report-header">
+        <div>
+          <div class="report-title">Cash Count Report</div>
+          <div class="report-subtitle">GHS Cash Counter</div>
+        </div>
+        <div class="report-meta">
+          <div data-report="timestamp"></div>
+          <div data-report="cashier"></div>
+          <div data-report="branch"></div>
+          <div data-report="reference"></div>
+        </div>
+      </div>
+      <div class="report-table-wrap">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th>Denomination</th>
+              <th>Count</th>
+              <th class="bundle-col">Bundle value</th>
+              <th class="num">Row total</th>
+            </tr>
+          </thead>
+          <tbody data-report="body"></tbody>
+        </table>
+      </div>
+      <div class="summary-grid">
+        <div class="metric">
+          <div class="label">Notes subtotal</div>
+          <div class="value" data-report="notes"></div>
+        </div>
+        <div class="metric">
+          <div class="label">Coins subtotal</div>
+          <div class="value" data-report="coins"></div>
+        </div>
+        <div class="metric">
+          <div class="label">Total pieces</div>
+          <div class="value" data-report="pieces"></div>
+        </div>
+        <div class="metric">
+          <div class="label">Expected</div>
+          <div class="value" data-report="expected"></div>
+        </div>
+        <div class="metric">
+          <div class="label">Difference</div>
+          <div class="value diff" data-report="difference"></div>
+        </div>
+      </div>
+      <div class="report-grand grand-total-row">
+        <span>Grand total</span>
+        <strong class="amount" data-report="grand"></strong>
+      </div>
+      <div class="report-watermark">Generated by GHS Cash Counter</div>
+      <div class="report-footer">Generated: <span data-report="footerTime"></span></div>
+    </div>
+  </template>
+
+  <script>
+    (() => {
+      // Storage keys and core defaults.
+      const STORAGE_KEYS = {
+        history: 'ghs_cash_counter_history_v1',
+        lastTotal: 'ghs_cash_counter_last_total_v1',
+        dark: 'ghs_cash_counter_dark_v1'
+      };
+
+      const defaultDenoms = [200, 100, 50, 20, 10, 5, 2, 1, 0.5, 0.2, 0.1];
+      const CAPTURE_VARS = [
+        '--bg',
+        '--bg-2',
+        '--card',
+        '--text',
+        '--muted',
+        '--border',
+        '--accent',
+        '--accent-2',
+        '--success',
+        '--danger',
+        '--shadow',
+        '--input-bg'
+      ];
+
+      const state = {
+        history: [],
+        bundleEnabled: false,
+        bundleSize: 100,
+        lastSavedTotalPw: 0,
+        reportTimestamp: null
+      };
+
+      const moneyFormatter = new Intl.NumberFormat('en-GH', {
+        style: 'currency',
+        currency: 'GHS',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+
+      const denomFormatterInt = new Intl.NumberFormat('en-GH', {
+        style: 'currency',
+        currency: 'GHS',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      });
+
+      const denomFormatterDec = new Intl.NumberFormat('en-GH', {
+        style: 'currency',
+        currency: 'GHS',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+
+      const plainFormatter = new Intl.NumberFormat('en-GH', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      });
+
+      const cediFormatter = new Intl.NumberFormat('en-GH', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+
+      const countFormatter = new Intl.NumberFormat('en-GH', {
+        maximumFractionDigits: 0
+      });
+
+      const elements = {
+        denomBody: document.getElementById('denomBody'),
+        addDenomInput: document.getElementById('addDenomInput'),
+        addDenomBtn: document.getElementById('addDenomBtn'),
+        denomError: document.getElementById('denomError'),
+        removeDefaultToggle: document.getElementById('removeDefaultToggle'),
+        bundleToggle: document.getElementById('bundleToggle'),
+        bundleSize: document.getElementById('bundleSize'),
+        cashierName: document.getElementById('cashierName'),
+        branchName: document.getElementById('branchName'),
+        reference: document.getElementById('reference'),
+        expectedAmount: document.getElementById('expectedAmount'),
+        notesSubtotal: document.getElementById('notesSubtotal'),
+        coinsSubtotal: document.getElementById('coinsSubtotal'),
+        piecesTotal: document.getElementById('piecesTotal'),
+        expectedDisplay: document.getElementById('expectedDisplay'),
+        differenceDisplay: document.getElementById('differenceDisplay'),
+        lastSavedTotal: document.getElementById('lastSavedTotal'),
+        deltaDisplay: document.getElementById('deltaDisplay'),
+        grandTotal: document.getElementById('grandTotal'),
+        stickyTotal: document.getElementById('stickyTotal'),
+        resetCounts: document.getElementById('resetCounts'),
+        saveHistory: document.getElementById('saveHistory'),
+        copySummary: document.getElementById('copySummary'),
+        copyWhatsApp: document.getElementById('copyWhatsApp'),
+        copyBreakdown: document.getElementById('copyBreakdown'),
+        copySnapshot: document.getElementById('copySnapshot'),
+        printBtn: document.getElementById('printBtn'),
+        includeZerosToggle: document.getElementById('includeZerosToggle'),
+        historyList: document.getElementById('historyList'),
+        clearHistory: document.getElementById('clearHistory'),
+        reportView: document.getElementById('reportView'),
+        reportTemplate: document.getElementById('reportTemplate'),
+        modal: document.getElementById('modal'),
+        modalBody: document.getElementById('modalBody'),
+        modalClose: document.getElementById('modalClose'),
+        modalPrint: document.getElementById('modalPrint'),
+        darkToggle: document.getElementById('darkToggle'),
+        statusMsg: document.getElementById('statusMsg')
+      };
+
+      function toPw(amount) {
+        return Math.round(amount * 100);
+      }
+
+      function formatMoneyFromPw(pw) {
+        return moneyFormatter.format(pw / 100);
+      }
+
+      function formatSignedMoney(pw) {
+        const sign = pw >= 0 ? '+' : '-';
+        return `${sign}${formatMoneyFromPw(Math.abs(pw))}`;
+      }
+
+      function formatDenom(denom) {
+        return Number.isInteger(denom) ? denomFormatterInt.format(denom) : denomFormatterDec.format(denom);
+      }
+
+      function formatPlainNumber(value) {
+        return plainFormatter.format(value);
+      }
+
+      function formatCedi(value) {
+        return `GH₵${cediFormatter.format(value)}`;
+      }
+
+      function formatCediFromPw(pw) {
+        return formatCedi(pw / 100);
+      }
+
+      function formatSignedCediFromPw(pw) {
+        const sign = pw >= 0 ? '+' : '-';
+        return `${sign}${formatCediFromPw(Math.abs(pw))}`;
+      }
+
+      function formatCount(value) {
+        return countFormatter.format(value);
+      }
+
+      function shouldIncludeZeros() {
+        return Boolean(elements.includeZerosToggle?.checked);
+      }
+
+
+      function formatTimestamp(msOrDate) {
+        const date = msOrDate instanceof Date ? msOrDate : new Date(msOrDate);
+        return date.toLocaleString('en-GH', { dateStyle: 'medium', timeStyle: 'short' });
+      }
+
+      function setStatus(message, tone = 'neutral') {
+        elements.statusMsg.textContent = message;
+        elements.statusMsg.dataset.tone = tone;
+        if (message) {
+          clearTimeout(setStatus.timer);
+          setStatus.timer = setTimeout(() => {
+            elements.statusMsg.textContent = '';
+            elements.statusMsg.dataset.tone = 'neutral';
+          }, 2500);
+        }
+      }
+
+      function sanitizeCountInput(input) {
+        const raw = input.value.trim();
+        if (raw === '') {
+          return 0;
+        }
+        let value = Number(raw);
+        if (!Number.isFinite(value) || value < 0) {
+          value = 0;
+        }
+        value = Math.floor(value);
+        if (String(value) !== raw) {
+          input.value = value;
+        }
+        return value;
+      }
+
+      function applyIncrement(row, increment) {
+        if (!row) {
+          return;
+        }
+        const input = row.querySelector('.count-input');
+        if (!input) {
+          return;
+        }
+        const current = sanitizeCountInput(input);
+        const nextValue = current + increment;
+        input.value = nextValue;
+        refreshAll();
+        input.focus();
+      }
+
+      function handleCustomIncrement(row) {
+        const customInput = row?.querySelector('.custom-inc-input');
+        if (!customInput) {
+          return;
+        }
+        const raw = customInput.value.trim();
+        if (!raw) {
+          setStatus('Enter a custom amount to add.', 'neutral');
+          return;
+        }
+        let increment = Number(raw);
+        if (!Number.isFinite(increment) || increment <= 0) {
+          setStatus('Custom increment must be positive.', 'danger');
+          return;
+        }
+        increment = Math.floor(increment);
+        if (increment <= 0) {
+          setStatus('Custom increment must be positive.', 'danger');
+          return;
+        }
+        customInput.value = '';
+        applyIncrement(row, increment);
+      }
+
+      function parseExpectedPw(value) {
+        if (value === '') {
+          return 0;
+        }
+        let num = Number(value);
+        if (!Number.isFinite(num) || num < 0) {
+          num = 0;
+        }
+        return toPw(num);
+      }
+
+      function getMeta() {
+        return {
+          cashier: elements.cashierName.value.trim(),
+          branch: elements.branchName.value.trim(),
+          reference: elements.reference.value.trim()
+        };
+      }
+
+      // Recalculate totals straight from the DOM to keep UI and reports in sync.
+      function buildSnapshot() {
+        const rows = [];
+        let notesPw = 0;
+        let coinsPw = 0;
+        let pieces = 0;
+        let grandPw = 0;
+
+        const rowEls = Array.from(elements.denomBody.querySelectorAll('tr'));
+        rowEls.forEach((row) => {
+          const denom = Number(row.dataset.denom);
+          const denomPw = Number(row.dataset.denomPw);
+          const input = row.querySelector('.count-input');
+          const count = sanitizeCountInput(input);
+          const rowTotalPw = denomPw * count;
+
+          row.querySelector('.row-total').textContent = formatMoneyFromPw(rowTotalPw);
+          row.classList.toggle('row-active', count > 0);
+
+          const bundleCell = row.querySelector('.bundle-val');
+          if (state.bundleEnabled && denom >= 1) {
+            bundleCell.textContent = formatMoneyFromPw(denomPw * state.bundleSize);
+          } else {
+            bundleCell.textContent = '-';
+          }
+
+          rows.push({
+            denom,
+            count,
+            totalPw: rowTotalPw
+          });
+
+          if (denom >= 1) {
+            notesPw += rowTotalPw;
+          } else {
+            coinsPw += rowTotalPw;
+          }
+          pieces += count;
+          grandPw += rowTotalPw;
+        });
+
+        const expectedPw = parseExpectedPw(elements.expectedAmount.value);
+        const diffPw = grandPw - expectedPw;
+
+        return {
+          rows,
+          totals: {
+            notesPw,
+            coinsPw,
+            pieces,
+            grandPw,
+            expectedPw,
+            diffPw
+          },
+          meta: getMeta()
+        };
+      }
+
+      function updateTotalsUI(snapshot) {
+        const { totals } = snapshot;
+        elements.notesSubtotal.textContent = formatMoneyFromPw(totals.notesPw);
+        elements.coinsSubtotal.textContent = formatMoneyFromPw(totals.coinsPw);
+        elements.piecesTotal.textContent = totals.pieces;
+        elements.expectedDisplay.textContent = formatMoneyFromPw(totals.expectedPw);
+        elements.differenceDisplay.textContent = formatSignedMoney(totals.diffPw);
+        elements.differenceDisplay.className = totals.diffPw === 0 ? 'diff neutral' : totals.diffPw > 0 ? 'diff positive' : 'diff negative';
+
+        elements.grandTotal.textContent = formatMoneyFromPw(totals.grandPw);
+        elements.stickyTotal.textContent = formatMoneyFromPw(totals.grandPw);
+
+        elements.lastSavedTotal.textContent = formatMoneyFromPw(state.lastSavedTotalPw);
+        const deltaPw = totals.grandPw - state.lastSavedTotalPw;
+        elements.deltaDisplay.textContent = formatSignedMoney(deltaPw);
+        elements.deltaDisplay.className = deltaPw === 0 ? 'diff neutral' : deltaPw > 0 ? 'diff positive' : 'diff negative';
+      }
+
+      function updateReportView(snapshot, timestamp) {
+        const reportTime = timestamp || state.reportTimestamp || new Date();
+        elements.reportView.innerHTML = '';
+        const card = buildReportCard(snapshot, reportTime, {
+          enabled: state.bundleEnabled,
+          size: state.bundleSize
+        });
+        elements.reportView.appendChild(card);
+      }
+
+      function refreshAll() {
+        const snapshot = buildSnapshot();
+        updateTotalsUI(snapshot);
+        updateReportView(snapshot);
+        return snapshot;
+      }
+
+      function buildReportCard(snapshot, reportTime, bundleSettings) {
+        const bundle = bundleSettings || { enabled: state.bundleEnabled, size: state.bundleSize };
+        const fragment = elements.reportTemplate.content.cloneNode(true);
+        const card = fragment.querySelector('.report-card');
+
+        if (!bundle.enabled) {
+          card.classList.add('bundle-hidden');
+        }
+
+        const setMeta = (selector, label, value) => {
+          const el = card.querySelector(selector);
+          if (!value) {
+            el.textContent = '';
+            el.classList.add('is-empty');
+            return;
+          }
+          el.textContent = `${label}: ${value}`;
+          el.classList.remove('is-empty');
+        };
+
+        card.querySelector('[data-report="timestamp"]').textContent = formatTimestamp(reportTime);
+        setMeta('[data-report="cashier"]', 'Cashier', snapshot.meta.cashier);
+        setMeta('[data-report="branch"]', 'Branch', snapshot.meta.branch);
+        setMeta('[data-report="reference"]', 'Ref', snapshot.meta.reference);
+
+        const body = card.querySelector('[data-report="body"]');
+        body.innerHTML = '';
+        snapshot.rows.forEach((row) => {
+          const tr = document.createElement('tr');
+          const denomTd = document.createElement('td');
+          denomTd.textContent = formatDenom(row.denom);
+
+          const countTd = document.createElement('td');
+          countTd.textContent = row.count;
+
+          const bundleTd = document.createElement('td');
+          bundleTd.className = 'bundle-col';
+          if (bundle.enabled && row.denom >= 1) {
+            bundleTd.textContent = formatMoneyFromPw(toPw(row.denom * bundle.size));
+          } else {
+            bundleTd.textContent = '-';
+          }
+
+          const totalTd = document.createElement('td');
+          totalTd.className = 'num';
+          totalTd.textContent = formatMoneyFromPw(row.totalPw);
+
+          if (row.count > 0) {
+            tr.classList.add('row-active');
+          }
+
+          tr.appendChild(denomTd);
+          tr.appendChild(countTd);
+          tr.appendChild(bundleTd);
+          tr.appendChild(totalTd);
+          body.appendChild(tr);
+        });
+
+        card.querySelector('[data-report="notes"]').textContent = formatMoneyFromPw(snapshot.totals.notesPw);
+        card.querySelector('[data-report="coins"]').textContent = formatMoneyFromPw(snapshot.totals.coinsPw);
+        card.querySelector('[data-report="pieces"]').textContent = snapshot.totals.pieces;
+        card.querySelector('[data-report="expected"]').textContent = formatMoneyFromPw(snapshot.totals.expectedPw);
+
+        const diffEl = card.querySelector('[data-report="difference"]');
+        diffEl.textContent = formatSignedMoney(snapshot.totals.diffPw);
+        diffEl.classList.remove('neutral', 'positive', 'negative');
+        diffEl.classList.add(snapshot.totals.diffPw === 0 ? 'neutral' : snapshot.totals.diffPw > 0 ? 'positive' : 'negative');
+
+        card.querySelector('[data-report="grand"]').textContent = formatMoneyFromPw(snapshot.totals.grandPw);
+        card.querySelector('[data-report="footerTime"]').textContent = formatTimestamp(reportTime);
+
+        return card;
+      }
+
+      function buildRow(denom, isDefault) {
+        const tr = document.createElement('tr');
+        const denomPw = toPw(denom);
+        tr.dataset.denom = denom;
+        tr.dataset.denomPw = denomPw;
+        tr.dataset.default = isDefault ? '1' : '0';
+
+        tr.innerHTML = `
+          <td class="denom-cell">${formatDenom(denom)}</td>
+          <td>
+            <div class="count-controls">
+              <input type="number" min="0" step="1" inputmode="numeric" class="count-input" placeholder="0" />
+              <div class="quick-buttons">
+                <button class="btn tiny inc-btn" data-inc="1" type="button">+1</button>
+                <button class="btn tiny inc-btn" data-inc="5" type="button">+5</button>
+                <button class="btn tiny inc-btn" data-inc="10" type="button">+10</button>
+                <div class="custom-inc">
+                  <input class="custom-inc-input" type="number" min="1" step="1" inputmode="numeric" placeholder="Other" aria-label="Custom increment" />
+                  <button class="btn tiny custom-inc-btn" type="button">Add</button>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="bundle-col bundle-val">-</td>
+          <td class="num row-total">${formatMoneyFromPw(0)}</td>
+          <td class="remove-cell">
+            <button class="btn ghost tiny remove-row" type="button" aria-label="Remove row">x</button>
+          </td>
+        `;
+
+        return tr;
+      }
+
+      function insertRowSorted(row) {
+        const newDenom = Number(row.dataset.denom);
+        const rows = Array.from(elements.denomBody.querySelectorAll('tr'));
+        const insertBefore = rows.find((existing) => Number(existing.dataset.denom) < newDenom);
+        if (insertBefore) {
+          elements.denomBody.insertBefore(row, insertBefore);
+        } else {
+          elements.denomBody.appendChild(row);
+        }
+      }
+
+      function addRow(denom, isDefault) {
+        const row = buildRow(denom, isDefault);
+        insertRowSorted(row);
+        updateRemoveButtons();
+        refreshAll();
+      }
+
+      function ensureDefaultRows() {
+        const rows = Array.from(elements.denomBody.querySelectorAll('tr'));
+        const rowsByPw = new Map(rows.map((row) => [Number(row.dataset.denomPw), row]));
+
+        defaultDenoms.forEach((denom) => {
+          const denomPw = toPw(denom);
+          const existing = rowsByPw.get(denomPw);
+          if (existing) {
+            existing.dataset.default = '1';
+            return;
+          }
+          addRow(denom, true);
+        });
+      }
+
+      function updateRemoveButtons() {
+        const allowDefaultRemoval = elements.removeDefaultToggle.checked;
+        const rows = Array.from(elements.denomBody.querySelectorAll('tr'));
+        rows.forEach((row) => {
+          const isDefault = row.dataset.default === '1';
+          const button = row.querySelector('.remove-row');
+          if (isDefault && !allowDefaultRemoval) {
+            button.disabled = true;
+            button.title = 'Enable the toggle to remove default rows.';
+          } else {
+            button.disabled = false;
+            button.title = '';
+          }
+        });
+      }
+
+      function addDenomination() {
+        elements.denomError.textContent = '';
+        const rawValue = elements.addDenomInput.value;
+        if (rawValue === '') {
+          elements.denomError.textContent = 'Enter a denomination value.';
+          return;
+        }
+        let value = Number(rawValue);
+        if (!Number.isFinite(value) || value <= 0) {
+          elements.denomError.textContent = 'Use a positive number.';
+          return;
+        }
+        value = Math.round(value * 100) / 100;
+        const denomPw = toPw(value);
+        const exists = Array.from(elements.denomBody.querySelectorAll('tr'))
+          .some((row) => Number(row.dataset.denomPw) === denomPw);
+
+        if (exists) {
+          elements.denomError.textContent = 'That denomination already exists.';
+          return;
+        }
+
+        addRow(value, false);
+        elements.addDenomInput.value = '';
+        elements.addDenomInput.focus();
+        setStatus('Denomination added.', 'success');
+      }
+
+      function resetCounts() {
+        const inputs = Array.from(elements.denomBody.querySelectorAll('.count-input'));
+        inputs.forEach((input) => {
+          input.value = '';
+        });
+        refreshAll();
+        setStatus('Counts reset.', 'neutral');
+      }
+
+      function buildWhatsAppMessage(snapshot, options = {}) {
+        const includeZeros = Boolean(options.includeZeros);
+        const timestamp = options.timestamp || new Date();
+        const lines = [];
+        lines.push(`Cash Count - ${formatTimestamp(timestamp)}`);
+
+        if (snapshot.meta.reference) {
+          lines.push(`Ref: ${snapshot.meta.reference}`);
+        }
+        if (snapshot.meta.cashier) {
+          lines.push(`Cashier: ${snapshot.meta.cashier}`);
+        }
+        if (snapshot.meta.branch) {
+          lines.push(`Branch: ${snapshot.meta.branch}`);
+        }
+
+        lines.push('');
+        lines.push('Items:');
+
+        const rows = includeZeros ? snapshot.rows : snapshot.rows.filter((row) => row.count > 0);
+
+        if (rows.length === 0) {
+          lines.push('No counted items.');
+        } else {
+          rows.forEach((row) => {
+            const denomLabel = cediFormatter.format(row.denom);
+            const totalLabel = formatCediFromPw(row.totalPw);
+            lines.push(`${denomLabel} × ${formatCount(row.count)} = ${totalLabel}`);
+          });
+        }
+
+        lines.push('');
+        lines.push('Totals:');
+        lines.push(`Notes subtotal: ${formatCediFromPw(snapshot.totals.notesPw)}`);
+        lines.push(`Coins subtotal: ${formatCediFromPw(snapshot.totals.coinsPw)}`);
+        lines.push(`Total pieces: ${formatCount(snapshot.totals.pieces)}`);
+        lines.push(`Grand total: ${formatCediFromPw(snapshot.totals.grandPw)}`);
+        lines.push(`Expected: ${formatCediFromPw(snapshot.totals.expectedPw)}`);
+        lines.push(`Difference: ${formatSignedCediFromPw(snapshot.totals.diffPw)}`);
+
+        return lines.join('\n');
+      }
+
+      function buildSummary(snapshot, timestamp) {
+        const parts = [];
+        parts.push(`Cash Count - ${timestamp}`);
+        if (snapshot.meta.reference) {
+          parts.push(`Ref: ${snapshot.meta.reference}`);
+        }
+        if (snapshot.meta.cashier) {
+          parts.push(`Cashier: ${snapshot.meta.cashier}`);
+        }
+        if (snapshot.meta.branch) {
+          parts.push(`Branch: ${snapshot.meta.branch}`);
+        }
+        parts.push(`Notes: ${formatCediFromPw(snapshot.totals.notesPw)}`);
+        parts.push(`Coins: ${formatCediFromPw(snapshot.totals.coinsPw)}`);
+        parts.push(`Pieces: ${formatCount(snapshot.totals.pieces)}`);
+        parts.push(`Grand: ${formatCediFromPw(snapshot.totals.grandPw)}`);
+        parts.push(`Expected: ${formatCediFromPw(snapshot.totals.expectedPw)}`);
+        parts.push(`Diff: ${formatSignedCediFromPw(snapshot.totals.diffPw)}`);
+        return parts.join(' | ');
+      }
+
+      function buildBreakdown(snapshot, timestamp, options = {}) {
+        const includeZeros = Boolean(options.includeZeros);
+        const rows = includeZeros ? snapshot.rows : snapshot.rows.filter((row) => row.count > 0);
+
+        const dataRows = rows.map((row) => ({
+          denom: cediFormatter.format(row.denom),
+          count: formatCount(row.count),
+          total: formatCediFromPw(row.totalPw)
+        }));
+
+        const header = { denom: 'Denomination', count: 'Count', total: 'Total' };
+        const denomWidth = Math.max(header.denom.length, ...dataRows.map((row) => row.denom.length), 0);
+        const countWidth = Math.max(header.count.length, ...dataRows.map((row) => row.count.length), 0);
+        const totalWidth = Math.max(header.total.length, ...dataRows.map((row) => row.total.length), 0);
+
+        const padRight = (value, length) => String(value).padEnd(length, ' ');
+        const padLeft = (value, length) => String(value).padStart(length, ' ');
+
+        const lines = [];
+        lines.push(`Cash Count - ${timestamp}`);
+        if (snapshot.meta.reference) {
+          lines.push(`Ref: ${snapshot.meta.reference}`);
+        }
+        if (snapshot.meta.cashier) {
+          lines.push(`Cashier: ${snapshot.meta.cashier}`);
+        }
+        if (snapshot.meta.branch) {
+          lines.push(`Branch: ${snapshot.meta.branch}`);
+        }
+
+        lines.push('');
+        lines.push('Breakdown:');
+
+        if (dataRows.length === 0) {
+          lines.push('No counted items.');
+        } else {
+          lines.push(`${padRight(header.denom, denomWidth)}  ${padLeft(header.count, countWidth)}  ${padLeft(header.total, totalWidth)}`);
+          dataRows.forEach((row) => {
+            lines.push(`${padRight(row.denom, denomWidth)}  ${padLeft(row.count, countWidth)}  ${padLeft(row.total, totalWidth)}`);
+          });
+        }
+
+        lines.push('');
+        lines.push('Totals:');
+        lines.push(`Notes subtotal: ${formatCediFromPw(snapshot.totals.notesPw)}`);
+        lines.push(`Coins subtotal: ${formatCediFromPw(snapshot.totals.coinsPw)}`);
+        lines.push(`Total pieces: ${formatCount(snapshot.totals.pieces)}`);
+        lines.push(`Grand total: ${formatCediFromPw(snapshot.totals.grandPw)}`);
+        lines.push(`Expected: ${formatCediFromPw(snapshot.totals.expectedPw)}`);
+        lines.push(`Difference: ${formatSignedCediFromPw(snapshot.totals.diffPw)}`);
+
+        return lines.join('\n');
+      }
+
+      // Clipboard helper with a textarea fallback for older browsers.
+      function copyToClipboard(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+          return navigator.clipboard.writeText(text);
+        }
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        return Promise.resolve();
+      }
+
+      function getCaptureVarStyle() {
+        const computed = getComputedStyle(document.body);
+        return CAPTURE_VARS.map((name) => `${name}:${computed.getPropertyValue(name).trim()};`).join(' ');
+      }
+
+      function loadImage(url) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error('Image load failed.'));
+          img.src = url;
+        });
+      }
+
+      function canvasToBlob(canvas) {
+        return new Promise((resolve, reject) => {
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('Blob capture failed.'));
+            }
+          }, 'image/png');
+        });
+      }
+
+      async function renderElementToPng(element, options = {}) {
+        const padding = Number.isFinite(options.padding) ? options.padding : 16;
+        const rect = element.getBoundingClientRect();
+        const contentWidth = Math.ceil(rect.width);
+        const contentHeight = Math.ceil(rect.height);
+
+        if (!contentWidth || !contentHeight) {
+          throw new Error('Nothing to capture.');
+        }
+
+        const width = contentWidth + padding * 2;
+        const height = contentHeight + padding * 2;
+        const styleText = document.querySelector('style')?.textContent || '';
+        const wrapperClass = document.body.classList.contains('dark') ? 'capture-root dark' : 'capture-root';
+        const wrapperStyle = `${getCaptureVarStyle()} background: var(--bg); padding: ${padding}px; width: ${width}px; height: ${height}px; box-sizing: border-box;`;
+        const html = `
+          <div xmlns="http://www.w3.org/1999/xhtml" class="${wrapperClass}" style="${wrapperStyle}">
+            <style>${styleText}</style>
+            ${element.outerHTML}
+          </div>
+        `;
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+          <foreignObject width="100%" height="100%">${html}</foreignObject>
+        </svg>`;
+
+        const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+
+        try {
+          const img = await loadImage(url);
+          const scale = window.devicePixelRatio || 1;
+          const canvas = document.createElement('canvas');
+          canvas.width = width * scale;
+          canvas.height = height * scale;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            throw new Error('Canvas unavailable.');
+          }
+          ctx.scale(scale, scale);
+          ctx.drawImage(img, 0, 0);
+          return await canvasToBlob(canvas);
+        } finally {
+          URL.revokeObjectURL(url);
+        }
+      }
+
+      async function copyReportCardToClipboard(card) {
+        if (!navigator.clipboard || !window.ClipboardItem) {
+          throw new Error('Clipboard API unavailable.');
+        }
+
+        const previousNodes = Array.from(elements.reportView.childNodes);
+        elements.reportView.innerHTML = '';
+        elements.reportView.appendChild(card);
+
+        try {
+          const blob = await renderElementToPng(card, { padding: 16 });
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        } finally {
+          elements.reportView.innerHTML = '';
+          previousNodes.forEach((node) => elements.reportView.appendChild(node));
+        }
+      }
+
+      async function copySnapshotImage() {
+        const snapshot = refreshAll();
+        const timestamp = new Date();
+        try {
+          const reportCard = buildReportCard(snapshot, timestamp, {
+            enabled: state.bundleEnabled,
+            size: state.bundleSize
+          });
+          await copyReportCardToClipboard(reportCard);
+          setStatus('Snapshot copied to clipboard.', 'success');
+        } catch (err) {
+          console.error(err);
+          const hint = window.isSecureContext
+            ? 'Try Print/PDF instead.'
+            : 'Clipboard image needs a secure context. Try Print/PDF.';
+          setStatus(`Snapshot copy failed. ${hint}`, 'danger');
+        }
+      }
+
+      async function copySnapshotFromEntry(entry) {
+        const snapshot = {
+          rows: entry.rows,
+          totals: entry.totals,
+          meta: entry.meta
+        };
+
+        try {
+          const reportCard = buildReportCard(snapshot, entry.createdAt, entry.bundle);
+          await copyReportCardToClipboard(reportCard);
+          setStatus('Snapshot copied to clipboard.', 'success');
+        } catch (err) {
+          console.error(err);
+          const hint = window.isSecureContext
+            ? 'Try Print/PDF instead.'
+            : 'Clipboard image needs a secure context. Try Print/PDF.';
+          setStatus(`Snapshot copy failed. ${hint}`, 'danger');
+        }
+      }
+
+      function loadSnapshotToEditor(entry) {
+        const confirmed = window.confirm('Load this snapshot into the editor? This will replace current counts.');
+        if (!confirmed) {
+          return;
+        }
+
+        const snapshot = {
+          rows: entry.rows,
+          totals: entry.totals,
+          meta: entry.meta
+        };
+
+        const targetPw = new Set([
+          ...defaultDenoms.map((denom) => toPw(denom)),
+          ...snapshot.rows.map((row) => toPw(row.denom))
+        ]);
+
+        Array.from(elements.denomBody.querySelectorAll('tr')).forEach((row) => {
+          const denomPw = Number(row.dataset.denomPw);
+          if (!targetPw.has(denomPw)) {
+            row.remove();
+          }
+        });
+
+        const existingPw = new Set(
+          Array.from(elements.denomBody.querySelectorAll('tr')).map((row) => Number(row.dataset.denomPw))
+        );
+
+        const targetList = Array.from(targetPw).sort((a, b) => b - a);
+        targetList.forEach((denomPw) => {
+          if (!existingPw.has(denomPw)) {
+            const isDefault = defaultDenoms.some((denom) => toPw(denom) === denomPw);
+            addRow(denomPw / 100, isDefault);
+          }
+        });
+
+        const rowMap = new Map(snapshot.rows.map((row) => [toPw(row.denom), row]));
+        Array.from(elements.denomBody.querySelectorAll('tr')).forEach((row) => {
+          const input = row.querySelector('.count-input');
+          const data = rowMap.get(Number(row.dataset.denomPw));
+          input.value = data ? data.count : '';
+        });
+
+        elements.cashierName.value = snapshot.meta.cashier || '';
+        elements.branchName.value = snapshot.meta.branch || '';
+        elements.reference.value = snapshot.meta.reference || '';
+        elements.expectedAmount.value = snapshot.totals.expectedPw ? (snapshot.totals.expectedPw / 100).toFixed(2) : '';
+
+        updateRemoveButtons();
+        refreshAll();
+        setStatus('Snapshot loaded for editing.', 'success');
+      }
+
+      function saveHistorySnapshot() {
+        if (!elements.removeDefaultToggle.checked) {
+          ensureDefaultRows();
+        }
+        const snapshot = refreshAll();
+        const entry = {
+          id: `h_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          createdAt: Date.now(),
+          meta: snapshot.meta,
+          rows: snapshot.rows,
+          totals: snapshot.totals,
+          bundle: {
+            enabled: state.bundleEnabled,
+            size: state.bundleSize
+          }
+        };
+
+        state.history.unshift(entry);
+        localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(state.history));
+        state.lastSavedTotalPw = snapshot.totals.grandPw;
+        localStorage.setItem(STORAGE_KEYS.lastTotal, String(state.lastSavedTotalPw));
+        renderHistory();
+        updateTotalsUI(snapshot);
+        setStatus('Saved to history.', 'success');
+      }
+
+      function renderHistory() {
+        elements.historyList.innerHTML = '';
+        if (state.history.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'history-empty';
+          empty.textContent = 'No history yet. Save a snapshot to start.';
+          elements.historyList.appendChild(empty);
+          return;
+        }
+
+        state.history.forEach((entry) => {
+          const card = document.createElement('div');
+          card.className = 'history-item';
+          card.dataset.id = entry.id;
+
+          const header = document.createElement('div');
+          header.className = 'history-main';
+
+          const meta = document.createElement('div');
+          meta.className = 'history-meta';
+
+          const time = document.createElement('div');
+          time.className = 'history-time';
+          time.textContent = formatTimestamp(entry.createdAt);
+
+          const metaLine = document.createElement('div');
+          metaLine.className = 'history-line';
+          const parts = [];
+          if (entry.meta.reference) {
+            parts.push(`Ref: ${entry.meta.reference}`);
+          }
+          if (entry.meta.cashier) {
+            parts.push(`Cashier: ${entry.meta.cashier}`);
+          }
+          if (entry.meta.branch) {
+            parts.push(`Branch: ${entry.meta.branch}`);
+          }
+          metaLine.textContent = parts.join(' | ') || 'No ref / cashier / branch';
+
+          meta.appendChild(time);
+          meta.appendChild(metaLine);
+
+          const total = document.createElement('div');
+          total.className = 'history-total';
+          total.textContent = formatMoneyFromPw(entry.totals.grandPw);
+
+          header.appendChild(meta);
+          header.appendChild(total);
+
+          const actions = document.createElement('div');
+          actions.className = 'history-actions';
+
+          const actionButtons = [
+            { label: 'View', action: 'view' },
+            { label: 'Edit', action: 'edit' },
+            { label: 'Copy Summary', action: 'copy-summary' },
+            { label: 'Copy Breakdown', action: 'copy-breakdown' },
+            { label: 'Copy WhatsApp', action: 'copy-whatsapp' },
+            { label: 'Copy Snapshot', action: 'copy-snapshot' },
+            { label: 'Delete', action: 'delete' }
+          ];
+
+          actionButtons.forEach((item) => {
+            const btn = document.createElement('button');
+            btn.className = item.action === 'delete' ? 'btn danger tiny' : 'btn tiny';
+            btn.textContent = item.label;
+            btn.dataset.action = item.action;
+            actions.appendChild(btn);
+          });
+
+          card.appendChild(header);
+          card.appendChild(actions);
+          elements.historyList.appendChild(card);
+        });
+      }
+
+      function openModal(entry) {
+        elements.modalBody.innerHTML = '';
+        const snapshot = {
+          rows: entry.rows,
+          totals: entry.totals,
+          meta: entry.meta
+        };
+        const card = buildReportCard(snapshot, entry.createdAt, entry.bundle);
+        elements.modalBody.appendChild(card);
+        elements.modal.classList.add('open');
+        document.body.classList.add('modal-open');
+        elements.modal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeModal() {
+        elements.modal.classList.remove('open');
+        document.body.classList.remove('modal-open');
+        elements.modal.setAttribute('aria-hidden', 'true');
+      }
+
+      function applyDarkMode(isDark) {
+        document.body.classList.toggle('dark', isDark);
+        elements.darkToggle.checked = isDark;
+        localStorage.setItem(STORAGE_KEYS.dark, isDark ? '1' : '0');
+      }
+
+      function loadDarkMode() {
+        const stored = localStorage.getItem(STORAGE_KEYS.dark);
+        if (stored === null) {
+          applyDarkMode(window.matchMedia('(prefers-color-scheme: dark)').matches);
+          return;
+        }
+        applyDarkMode(stored === '1');
+      }
+
+      function handlePrint() {
+        state.reportTimestamp = new Date();
+        refreshAll();
+        window.print();
+      }
+
+      window.addEventListener('afterprint', () => {
+        if (!state.reportTimestamp) {
+          return;
+        }
+        state.reportTimestamp = null;
+        refreshAll();
+      });
+
+      function init() {
+        defaultDenoms.forEach((denom) => addRow(denom, true));
+        updateRemoveButtons();
+        state.bundleEnabled = elements.bundleToggle.checked;
+        document.body.classList.toggle('bundle-off', !state.bundleEnabled);
+
+        const historyRaw = localStorage.getItem(STORAGE_KEYS.history);
+        if (historyRaw) {
+          try {
+            state.history = JSON.parse(historyRaw);
+          } catch (err) {
+            state.history = [];
+          }
+        }
+        const lastTotalRaw = localStorage.getItem(STORAGE_KEYS.lastTotal);
+        if (lastTotalRaw) {
+          state.lastSavedTotalPw = Number(lastTotalRaw) || 0;
+        } else if (state.history[0]) {
+          state.lastSavedTotalPw = state.history[0].totals?.grandPw || 0;
+        }
+
+        loadDarkMode();
+        renderHistory();
+        refreshAll();
+      }
+
+      elements.denomBody.addEventListener('input', (event) => {
+        if (event.target.classList.contains('count-input')) {
+          sanitizeCountInput(event.target);
+          refreshAll();
+        }
+      });
+
+      elements.denomBody.addEventListener('click', (event) => {
+        const incBtn = event.target.closest('.inc-btn');
+        if (incBtn) {
+          const row = incBtn.closest('tr');
+          const inc = Number(incBtn.dataset.inc) || 0;
+          applyIncrement(row, inc);
+          return;
+        }
+
+        const customBtn = event.target.closest('.custom-inc-btn');
+        if (customBtn) {
+          const row = customBtn.closest('tr');
+          handleCustomIncrement(row);
+          return;
+        }
+
+        const removeBtn = event.target.closest('.remove-row');
+        if (removeBtn) {
+          const row = removeBtn.closest('tr');
+          const isDefault = row.dataset.default === '1';
+          if (isDefault && !elements.removeDefaultToggle.checked) {
+            setStatus('Enable the toggle to remove default rows.', 'neutral');
+            return;
+          }
+          row.remove();
+          refreshAll();
+        }
+      });
+
+      elements.denomBody.addEventListener('keydown', (event) => {
+        if (event.target.classList.contains('custom-inc-input') && event.key === 'Enter') {
+          event.preventDefault();
+          handleCustomIncrement(event.target.closest('tr'));
+          return;
+        }
+
+        if (event.target.classList.contains('count-input')) {
+          const inputs = Array.from(elements.denomBody.querySelectorAll('.count-input'));
+          const index = inputs.indexOf(event.target);
+
+          if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            const next = inputs[index + 1];
+            if (next) {
+              next.focus();
+              next.select();
+            }
+          }
+
+          if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            const prev = inputs[index - 1];
+            if (prev) {
+              prev.focus();
+              prev.select();
+            }
+          }
+
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            saveHistorySnapshot();
+          }
+        }
+      });
+
+      elements.addDenomBtn.addEventListener('click', addDenomination);
+      elements.addDenomInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          addDenomination();
+        }
+      });
+
+      elements.removeDefaultToggle.addEventListener('change', () => {
+        if (!elements.removeDefaultToggle.checked) {
+          ensureDefaultRows();
+        }
+        updateRemoveButtons();
+        refreshAll();
+      });
+
+      elements.bundleToggle.addEventListener('change', (event) => {
+        state.bundleEnabled = event.target.checked;
+        document.body.classList.toggle('bundle-off', !state.bundleEnabled);
+        refreshAll();
+      });
+
+      elements.bundleSize.addEventListener('input', (event) => {
+        const value = Number(event.target.value);
+        state.bundleSize = Number.isFinite(value) && value > 0 ? Math.floor(value) : 1;
+        event.target.value = state.bundleSize;
+        refreshAll();
+      });
+
+      elements.cashierName.addEventListener('input', refreshAll);
+      elements.branchName.addEventListener('input', refreshAll);
+      elements.reference.addEventListener('input', refreshAll);
+      elements.expectedAmount.addEventListener('input', () => {
+        if (elements.expectedAmount.value !== '' && Number(elements.expectedAmount.value) < 0) {
+          elements.expectedAmount.value = 0;
+        }
+        refreshAll();
+      });
+
+      elements.resetCounts.addEventListener('click', resetCounts);
+      elements.saveHistory.addEventListener('click', saveHistorySnapshot);
+      elements.copySummary.addEventListener('click', () => {
+        const snapshot = refreshAll();
+        const message = buildSummary(snapshot, formatTimestamp(new Date()));
+        copyToClipboard(message)
+          .then(() => setStatus('Summary copied.', 'success'))
+          .catch(() => setStatus('Copy failed. Try again.', 'danger'));
+      });
+      elements.copyWhatsApp.addEventListener('click', () => {
+        const snapshot = refreshAll();
+        const message = buildWhatsAppMessage(snapshot, {
+          includeZeros: shouldIncludeZeros(),
+          timestamp: new Date()
+        });
+        copyToClipboard(message)
+          .then(() => setStatus('WhatsApp message copied.', 'success'))
+          .catch(() => setStatus('Copy failed. Try again.', 'danger'));
+      });
+      elements.copyBreakdown.addEventListener('click', () => {
+        const snapshot = refreshAll();
+        const message = buildBreakdown(snapshot, formatTimestamp(new Date()), {
+          includeZeros: shouldIncludeZeros()
+        });
+        copyToClipboard(message)
+          .then(() => setStatus('Breakdown copied.', 'success'))
+          .catch(() => setStatus('Copy failed. Try again.', 'danger'));
+      });
+      elements.copySnapshot.addEventListener('click', copySnapshotImage);
+      elements.printBtn.addEventListener('click', handlePrint);
+
+      elements.clearHistory.addEventListener('click', () => {
+        const confirmed = window.confirm('Clear all history entries?');
+        if (!confirmed) {
+          return;
+        }
+        state.history = [];
+        localStorage.removeItem(STORAGE_KEYS.history);
+        localStorage.removeItem(STORAGE_KEYS.lastTotal);
+        state.lastSavedTotalPw = 0;
+        renderHistory();
+        refreshAll();
+        setStatus('History cleared.', 'neutral');
+      });
+
+      elements.historyList.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-action]');
+        if (!button) {
+          return;
+        }
+
+        const card = button.closest('.history-item');
+        if (!card) {
+          return;
+        }
+
+        const entry = state.history.find((item) => item.id === card.dataset.id);
+        if (!entry) {
+          return;
+        }
+
+        const timestamp = formatTimestamp(entry.createdAt);
+        const snapshot = {
+          rows: entry.rows,
+          totals: entry.totals,
+          meta: entry.meta
+        };
+
+        switch (button.dataset.action) {
+          case 'view':
+            openModal(entry);
+            break;
+          case 'edit':
+            loadSnapshotToEditor(entry);
+            break;
+          case 'copy-summary':
+            copyToClipboard(buildSummary(snapshot, timestamp))
+              .then(() => setStatus('Summary copied.', 'success'))
+              .catch(() => setStatus('Copy failed.', 'danger'));
+            break;
+          case 'copy-breakdown':
+            copyToClipboard(buildBreakdown(snapshot, timestamp, { includeZeros: shouldIncludeZeros() }))
+              .then(() => setStatus('Breakdown copied.', 'success'))
+              .catch(() => setStatus('Copy failed.', 'danger'));
+            break;
+          case 'copy-whatsapp':
+            copyToClipboard(buildWhatsAppMessage(snapshot, { includeZeros: shouldIncludeZeros(), timestamp: entry.createdAt }))
+              .then(() => setStatus('WhatsApp message copied.', 'success'))
+              .catch(() => setStatus('Copy failed.', 'danger'));
+            break;
+          case 'copy-snapshot':
+            copySnapshotFromEntry(entry);
+            break;
+          case 'delete':
+            state.history = state.history.filter((item) => item.id !== entry.id);
+            localStorage.setItem(STORAGE_KEYS.history, JSON.stringify(state.history));
+            renderHistory();
+            setStatus('Entry deleted.', 'neutral');
+            break;
+          default:
+            break;
+        }
+      });
+
+      elements.modalClose.addEventListener('click', closeModal);
+      elements.modal.addEventListener('click', (event) => {
+        if (event.target === elements.modal) {
+          closeModal();
+        }
+      });
+
+      elements.modalPrint.addEventListener('click', () => {
+        window.print();
+      });
+
+      elements.darkToggle.addEventListener('change', (event) => {
+        applyDarkMode(event.target.checked);
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && elements.modal.classList.contains('open')) {
+          closeModal();
+        }
+      });
+
+      init();
+    })();
+  </script>
+</body>
+</html>
