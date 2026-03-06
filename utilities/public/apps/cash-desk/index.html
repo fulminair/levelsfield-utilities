@@ -856,7 +856,7 @@
         <label class="switch">
           <input type="checkbox" id="darkToggle" />
           <span class="slider"></span>
-          <span class="switch-label">Dark mode</span>
+          <span class="switch-label">Global dark mode</span>
         </label>
         <label class="switch">
           <input type="checkbox" id="bundleToggle" />
@@ -1076,9 +1076,9 @@
       // Storage keys and core defaults.
       const STORAGE_KEYS = {
         history: 'ghs_cash_counter_history_v1',
-        lastTotal: 'ghs_cash_counter_last_total_v1',
-        dark: 'ghs_cash_counter_dark_v1'
+        lastTotal: 'ghs_cash_counter_last_total_v1'
       };
+      const THEME_KEY = 'utilities-theme';
 
       const defaultDenoms = [200, 100, 50, 20, 10, 5, 2, 1, 0.5, 0.2, 0.1];
       const CAPTURE_VARS = [
@@ -2039,19 +2039,22 @@
         elements.modal.setAttribute('aria-hidden', 'true');
       }
 
-      function applyDarkMode(isDark) {
+      function applyDarkMode(isDark, options = {}) {
+        const { persist = true } = options;
         document.body.classList.toggle('dark', isDark);
         elements.darkToggle.checked = isDark;
-        localStorage.setItem(STORAGE_KEYS.dark, isDark ? '1' : '0');
+        if (persist) {
+          localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+        }
       }
 
       function loadDarkMode() {
-        const stored = localStorage.getItem(STORAGE_KEYS.dark);
-        if (stored === null) {
+        const stored = localStorage.getItem(THEME_KEY);
+        if (stored !== 'light' && stored !== 'dark') {
           applyDarkMode(window.matchMedia('(prefers-color-scheme: dark)').matches);
           return;
         }
-        applyDarkMode(stored === '1');
+        applyDarkMode(stored === 'dark', { persist: false });
       }
 
       function handlePrint() {
@@ -2066,6 +2069,12 @@
         }
         state.reportTimestamp = null;
         refreshAll();
+      });
+
+      window.addEventListener('storage', (event) => {
+        if (event.key !== THEME_KEY) return;
+        if (event.newValue !== 'light' && event.newValue !== 'dark') return;
+        applyDarkMode(event.newValue === 'dark', { persist: false });
       });
 
       function init() {

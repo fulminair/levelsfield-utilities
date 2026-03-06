@@ -4,46 +4,48 @@
 
 :root {
   color-scheme: light;
-  --bg-start: #f6f1ea;
-  --bg-end: #f1f6f4;
-  --text-primary: #18212b;
-  --text-secondary: #5f6b7a;
-  --text-tertiary: #1f2933;
-  --card-bg: rgba(255, 255, 255, 0.82);
-  --card-border: rgba(255, 255, 255, 0.6);
+  --page-bg: #eff3f8;
+  --text-primary: #132233;
+  --text-secondary: #4f6278;
+  --text-tertiary: #243141;
+  --card-bg: #ffffff;
+  --card-border: #d7e2ef;
   --surface: #ffffff;
-  --border-default: #e2e8f0;
-  --border-subtle: #f1f5f9;
-  --accent: #1e5a6a;
-  --accent-strong: #0f3a45;
-  --accent-soft: rgba(30, 90, 106, 0.3);
-  --badge-internal-bg: #e1eef0;
-  --badge-internal-text: #1e5a6a;
-  --badge-external-bg: #f2e6dc;
-  --badge-external-text: #9b4f1f;
-  --ring: rgba(30, 90, 106, 0.2);
+  --border-default: #dce6f5;
+  --border-subtle: #ebf1fa;
+  --accent: #1f6b72;
+  --accent-strong: #155057;
+  --accent-soft: rgba(31, 107, 114, 0.28);
+  --badge-internal-bg: #deeff2;
+  --badge-internal-text: #1d6571;
+  --badge-external-bg: #f5e6dd;
+  --badge-external-text: #9d5326;
+  --ring: rgba(31, 107, 114, 0.2);
+  --hero-orb-1: rgba(31, 107, 114, 0.24);
+  --hero-orb-2: rgba(233, 111, 74, 0.24);
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg-start: #0b1220;
-  --bg-end: #111827;
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-tertiary: #e2e8f0;
-  --card-bg: rgba(15, 23, 42, 0.82);
-  --card-border: rgba(148, 163, 184, 0.18);
-  --surface: #0f172a;
-  --border-default: #1f2937;
-  --border-subtle: #1e293b;
-  --accent: #7dd3fc;
-  --accent-strong: #38bdf8;
-  --accent-soft: rgba(125, 211, 252, 0.35);
-  --badge-internal-bg: rgba(14, 116, 144, 0.25);
-  --badge-internal-text: #7dd3fc;
-  --badge-external-bg: rgba(148, 74, 40, 0.3);
-  --badge-external-text: #f4b28c;
-  --ring: rgba(56, 189, 248, 0.25);
+  --page-bg: #0c1420;
+  --text-primary: #edf4ff;
+  --text-secondary: #b9c7db;
+  --text-tertiary: #dae6f7;
+  --card-bg: #121d2d;
+  --card-border: #25374d;
+  --surface: #111b2b;
+  --border-default: #1f3045;
+  --border-subtle: #1a2638;
+  --accent: #6ed7d2;
+  --accent-strong: #92efe9;
+  --accent-soft: rgba(110, 215, 210, 0.35);
+  --badge-internal-bg: rgba(24, 107, 117, 0.3);
+  --badge-internal-text: #8de8e3;
+  --badge-external-bg: rgba(152, 82, 49, 0.3);
+  --badge-external-text: #ffc39e;
+  --ring: rgba(146, 239, 233, 0.24);
+  --hero-orb-1: rgba(110, 215, 210, 0.32);
+  --hero-orb-2: rgba(255, 147, 106, 0.28);
 }
 
 * {
@@ -61,10 +63,9 @@ body {
   font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system,
     BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: var(--text-primary);
-  background:
-    radial-gradient(circle at top left, rgba(30, 90, 106, 0.12), transparent 55%),
-    radial-gradient(circle at 20% 70%, rgba(210, 138, 75, 0.12), transparent 50%),
-    linear-gradient(145deg, var(--bg-start), var(--bg-end));
+  background-color: var(--page-bg);
+  background-image: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 a {

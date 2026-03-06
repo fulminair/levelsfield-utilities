@@ -809,10 +809,10 @@ input[type="number"]::-webkit-outer-spin-button {
     </style>
     <script>
       (function () {
-        const themeKey = "tax-calculator-theme";
+        const themeKey = "utilities-theme";
         const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
         const saved = localStorage.getItem(themeKey);
-        const theme = saved || (prefersDark ? "dark" : "light");
+        const theme = saved === "light" || saved === "dark" ? saved : (prefersDark ? "dark" : "light");
         document.documentElement.setAttribute("data-theme", theme);
       })();
     </script>
@@ -826,7 +826,7 @@ input[type="number"]::-webkit-outer-spin-button {
           <p class="page-subtitle">Utility tax and levies calculator with adjustable rates.</p>
         </div>
         <div class="page-actions">
-          <button class="btn btn-secondary btn-small" id="themeToggle" type="button">Toggle theme</button>
+          <button class="btn btn-secondary btn-small" id="themeToggle" type="button">Theme (global)</button>
         </div>
       </header>
 
@@ -839,26 +839,38 @@ input[type="number"]::-webkit-outer-spin-button {
 
     <script>
       (function () {
-        const themeKey = "tax-calculator-theme";
+        const themeKey = "utilities-theme";
         const toggle = document.getElementById("themeToggle");
         if (!toggle) return;
 
-        const setLabel = (theme) => {
-          toggle.textContent = theme === "dark" ? "Switch to light" : "Switch to dark";
+        const resolveTheme = (candidate) => {
+          return candidate === "light" || candidate === "dark" ? candidate : null;
         };
 
-        const applyTheme = (theme) => {
+        const setLabel = (theme) => {
+          toggle.textContent = theme === "dark" ? "Use light mode (global)" : "Use dark mode (global)";
+        };
+
+        const applyTheme = (theme, persist) => {
           document.documentElement.setAttribute("data-theme", theme);
-          localStorage.setItem(themeKey, theme);
+          if (persist) localStorage.setItem(themeKey, theme);
           setLabel(theme);
         };
 
-        const current = document.documentElement.getAttribute("data-theme") || "dark";
-        setLabel(current);
+        const current = resolveTheme(document.documentElement.getAttribute("data-theme")) || "dark";
+        applyTheme(current, false);
 
         toggle.addEventListener("click", () => {
-          const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-          applyTheme(next);
+          const next =
+            document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+          applyTheme(next, true);
+        });
+
+        window.addEventListener("storage", (event) => {
+          if (event.key !== themeKey) return;
+          const next = resolveTheme(event.newValue);
+          if (!next) return;
+          applyTheme(next, false);
         });
       })();
     </script>

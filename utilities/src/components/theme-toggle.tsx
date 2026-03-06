@@ -1,15 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-const THEME_KEY = "utilities-theme";
-
-type Theme = "light" | "dark";
+import { THEME_KEY, Theme, resolveTheme } from "@/lib/theme";
 
 const getInitialTheme = (): Theme => {
   if (typeof window === "undefined") return "light";
-  const stored = window.localStorage.getItem(THEME_KEY);
-  if (stored === "light" || stored === "dark") return stored;
+  const stored = resolveTheme(window.localStorage.getItem(THEME_KEY));
+  if (stored) return stored;
   const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches;
   return prefersDark ? "dark" : "light";
 };
@@ -21,6 +18,18 @@ export default function ThemeToggle() {
     const initial = getInitialTheme();
     setTheme(initial);
     document.documentElement.setAttribute("data-theme", initial);
+
+    const syncFromStorage = (event: StorageEvent) => {
+      if (event.key !== THEME_KEY) return;
+      const nextTheme = resolveTheme(event.newValue) ?? getInitialTheme();
+      setTheme(nextTheme);
+      document.documentElement.setAttribute("data-theme", nextTheme);
+    };
+
+    window.addEventListener("storage", syncFromStorage);
+    return () => {
+      window.removeEventListener("storage", syncFromStorage);
+    };
   }, []);
 
   const toggleTheme = () => {
@@ -34,10 +43,11 @@ export default function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      className="fixed right-4 top-4 z-50 rounded-full border border-[color:var(--accent-soft)] bg-[color:var(--card-bg)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--text-primary)] shadow-card backdrop-blur"
-      aria-label="Toggle theme"
+      className="fixed right-5 top-5 z-50 inline-flex items-center gap-2 rounded-full border border-[color:var(--accent-soft)] bg-[color:var(--card-bg)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--text-primary)] shadow-card backdrop-blur transition hover:-translate-y-0.5 hover:shadow-card-hover"
+      aria-label="Toggle global theme"
     >
-      {theme === "dark" ? "Light mode" : "Dark mode"}
+      <span className="inline-flex h-2 w-2 rounded-full bg-[color:var(--accent)]" aria-hidden="true" />
+      {theme === "dark" ? "Light Mode" : "Dark Mode"}
     </button>
   );
 }
