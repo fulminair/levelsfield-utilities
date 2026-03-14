@@ -4,48 +4,48 @@
 
 :root {
   color-scheme: light;
-  --page-bg: #eff3f8;
-  --text-primary: #132233;
-  --text-secondary: #4f6278;
-  --text-tertiary: #243141;
+  --page-bg: #f4f7ff;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-tertiary: #1e293b;
   --card-bg: #ffffff;
-  --card-border: #d7e2ef;
-  --surface: #ffffff;
-  --border-default: #dce6f5;
-  --border-subtle: #ebf1fa;
-  --accent: #1f6b72;
-  --accent-strong: #155057;
-  --accent-soft: rgba(31, 107, 114, 0.28);
-  --badge-internal-bg: #deeff2;
-  --badge-internal-text: #1d6571;
-  --badge-external-bg: #f5e6dd;
-  --badge-external-text: #9d5326;
-  --ring: rgba(31, 107, 114, 0.2);
-  --hero-orb-1: rgba(31, 107, 114, 0.24);
-  --hero-orb-2: rgba(233, 111, 74, 0.24);
+  --card-border: #cbd8ee;
+  --surface: #f8fbff;
+  --border-default: #d7e3f6;
+  --border-subtle: #e8effa;
+  --accent: #1d4ed8;
+  --accent-strong: #1e40af;
+  --accent-soft: rgba(29, 78, 216, 0.28);
+  --badge-internal-bg: #dbeafe;
+  --badge-internal-text: #1e3a8a;
+  --badge-external-bg: #e2e8f0;
+  --badge-external-text: #334155;
+  --ring: rgba(29, 78, 216, 0.2);
+  --hero-orb-1: rgba(29, 78, 216, 0.18);
+  --hero-orb-2: rgba(59, 130, 246, 0.12);
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --page-bg: #0c1420;
-  --text-primary: #edf4ff;
-  --text-secondary: #b9c7db;
-  --text-tertiary: #dae6f7;
-  --card-bg: #121d2d;
-  --card-border: #25374d;
-  --surface: #111b2b;
-  --border-default: #1f3045;
-  --border-subtle: #1a2638;
-  --accent: #6ed7d2;
-  --accent-strong: #92efe9;
-  --accent-soft: rgba(110, 215, 210, 0.35);
-  --badge-internal-bg: rgba(24, 107, 117, 0.3);
-  --badge-internal-text: #8de8e3;
-  --badge-external-bg: rgba(152, 82, 49, 0.3);
-  --badge-external-text: #ffc39e;
-  --ring: rgba(146, 239, 233, 0.24);
-  --hero-orb-1: rgba(110, 215, 210, 0.32);
-  --hero-orb-2: rgba(255, 147, 106, 0.28);
+  --page-bg: #0b1220;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #cbd5e1;
+  --card-bg: #111827;
+  --card-border: #243247;
+  --surface: #0f172a;
+  --border-default: #2a3b57;
+  --border-subtle: #1f2d44;
+  --accent: #60a5fa;
+  --accent-strong: #93c5fd;
+  --accent-soft: rgba(96, 165, 250, 0.35);
+  --badge-internal-bg: rgba(37, 99, 235, 0.24);
+  --badge-internal-text: #bfdbfe;
+  --badge-external-bg: rgba(51, 65, 85, 0.45);
+  --badge-external-text: #cbd5e1;
+  --ring: rgba(147, 197, 253, 0.24);
+  --hero-orb-1: rgba(96, 165, 250, 0.22);
+  --hero-orb-2: rgba(59, 130, 246, 0.16);
 }
 
 * {
@@ -74,5 +74,5 @@ a {
 }
 
 ::selection {
-  background: rgba(30, 90, 106, 0.2);
+  background: rgba(37, 99, 235, 0.22);
 }

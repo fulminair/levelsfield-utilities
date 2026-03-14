@@ -43,7 +43,7 @@ export default function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      className="fixed right-5 top-5 z-50 inline-flex items-center gap-2 rounded-full border border-[color:var(--accent-soft)] bg-[color:var(--card-bg)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--text-primary)] shadow-card backdrop-blur transition hover:-translate-y-0.5 hover:shadow-card-hover"
+      className="fixed right-4 top-4 z-50 inline-flex items-center gap-2 rounded-md border border-[color:var(--border-default)] bg-[color:var(--card-bg)] px-3 py-2 text-xs font-semibold text-[color:var(--text-primary)] transition"
       aria-label="Toggle global theme"
     >
       <span className="inline-flex h-2 w-2 rounded-full bg-[color:var(--accent)]" aria-hidden="true" />

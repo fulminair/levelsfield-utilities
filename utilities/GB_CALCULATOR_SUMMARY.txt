@@ -1,0 +1,225 @@
+GB CALCULATOR - FULL CALCULATION SUMMARY
+========================================
+
+1) INPUTS USED
+--------------
+- Employee name
+- Basic salary
+- Allowance toggles and rates:
+  - Transport allowance (% of basic)
+  - Utility allowance (% of basic)
+  - Rent allowance (% of basic)
+  - Risk allowance (% of basic)
+  - Leave allowance (% of basic)
+  - Clothing allowance (% of basic)
+- Override amounts (optional) for each allowance above
+- Other earnings
+- Overtime addition
+- Welfare fund
+- Union dues
+- PMSU/GMWU support
+- Lateness deduction
+- Absenteeism deduction
+- Loan amount
+- Total paid (loan)
+
+All numeric inputs are parsed with commas supported.
+Example: "22,000" -> 22000
+
+
+2) FIXED RATES IN THE APP
+-------------------------
+- Social security rate: 5.5% (0.055)
+- Provident earning rate A: 3.5% (0.035)
+- Provident earning rate B: 6.5% (0.065)
+- Provident deduction rate A: 3.5% (0.035)
+- Provident deduction rate B: 16.5% (0.165)
+
+Default allowance rates:
+- Transport: 25%
+- Utility: 15%
+- Rent: 20%
+- Risk: 10%
+- Leave: 100%
+- Clothing: 0%
+
+
+3) ALLOWANCE LOGIC (TOGGLE + OVERRIDE)
+--------------------------------------
+For each allowance (transport, utility, rent, risk, leave, clothing):
+
+1. Auto amount:
+   allowanceAuto = basic * (rate / 100) if included, else 0
+
+2. Final amount:
+   if include is OFF -> allowance = 0
+   if include is ON and override is OFF -> allowance = allowanceAuto
+   if include is ON and override is ON  -> allowance = manual amount input
+
+
+4) EARNINGS CALCULATIONS
+------------------------
+Provident earnings are always based on basic salary:
+- providentEarning35 = basic * 0.035
+- providentEarning65 = basic * 0.065
+
+Gross earnings:
+grossEarnings =
+  basic
+  + transport
+  + utility
+  + rent
+  + risk
+  + leaveAllowance
+  + clothingAllowance
+  + otherEarnings
+  + overtimeAddition
+  + providentEarning35
+  + providentEarning65
+
+
+5) TAXABLE INCOME AND PAYE
+--------------------------
+Pre-tax statutory values:
+- socialSecurity = basic * 0.055
+- providentDeduction35  = basic * 0.035
+- providentDeduction165 = basic * 0.165
+
+Taxable income:
+taxableIncome = max(0, grossEarnings - socialSecurity - providentDeduction165)
+
+PAYE function:
+Let income = max(0, taxableIncome)
+
+FULL PAYE BANDS (AS USED IN THE APP)
+------------------------------------
+- Band 1:
+  - First 490.00 at 0%
+  - Max tax in band: 0.00
+  - Cumulative tax after band: 0.00
+
+- Band 2:
+  - Next 110.00 (490.01 to 600.00) at 5%
+  - Max tax in band: 5.50
+  - Cumulative tax after band: 5.50
+
+- Band 3:
+  - Next 130.00 (600.01 to 730.00) at 10%
+  - Max tax in band: 13.00
+  - Cumulative tax after band: 18.50
+
+- Band 4:
+  - Next 3,166.67 (730.01 to 3,896.67) at 17.5%
+  - Max tax in band: 554.17
+  - Cumulative tax after band: 572.67
+
+- Band 5:
+  - Next 16,000.00 (3,896.68 to 19,896.67) at 25%
+  - Max tax in band: 4,000.00
+  - Cumulative tax after band: 4,572.67
+
+- Band 6:
+  - Next 30,520.00 (19,896.68 to 50,416.67) at 30%
+  - Max tax in band: 9,156.00
+  - Cumulative tax after band: 13,728.67
+
+- Band 7:
+  - Any amount above 50,416.67 at 35%
+  - No fixed cap (continues indefinitely)
+
+EQUIVALENT PIECEWISE FORMULA
+----------------------------
+- If income <= 490:
+  PAYE = 0
+- If income <= 600:
+  PAYE = (income - 490) * 0.05
+- If income <= 730:
+  PAYE = 5.5 + (income - 600) * 0.10
+- If income <= 3896.67:
+  PAYE = 18.5 + (income - 730) * 0.175
+- If income <= 19896.67:
+  PAYE = 572.67 + (income - 3896.67) * 0.25
+- If income <= 50416.67:
+  PAYE = 4572.67 + (income - 19896.67) * 0.30
+- If income > 50416.67:
+  PAYE = 13728.67 + (income - 50416.67) * 0.35
+
+WORKED EXAMPLES (ONE PER BAND)
+------------------------------
+- Band 1 example (income = 400.00):
+  PAYE = 0.00
+
+- Band 2 example (income = 550.00):
+  PAYE = (550 - 490) * 5% = 60 * 0.05 = 3.00
+
+- Band 3 example (income = 700.00):
+  PAYE = 5.50 + (700 - 600) * 10%
+  PAYE = 5.50 + 10.00 = 15.50
+
+- Band 4 example (income = 2,000.00):
+  PAYE = 18.50 + (2,000 - 730) * 17.5%
+  PAYE = 18.50 + 222.25 = 240.75
+
+  Full split for 2,000.00:
+  - 490.00 at 0% = 0.00
+  - 110.00 at 5% = 5.50
+  - 130.00 at 10% = 13.00
+  - 1,270.00 at 17.5% = 222.25
+  Total PAYE = 240.75
+
+- Band 5 example (income = 10,000.00):
+  PAYE = 572.67 + (10,000 - 3,896.67) * 25%
+  PAYE = 572.67 + 1,525.83 = 2,098.50
+
+- Band 6 example (income = 30,000.00):
+  PAYE = 4,572.67 + (30,000 - 19,896.67) * 30%
+  PAYE = 4,572.67 + 3,031.00 = 7,603.67
+
+- Band 7 example (income = 60,000.00):
+  PAYE = 13,728.67 + (60,000 - 50,416.67) * 35%
+  PAYE = 13,728.67 + 3,354.17 = 17,082.84
+
+
+6) DEDUCTIONS, NET SALARY, LOAN
+-------------------------------
+Total deductions:
+totalDeductions =
+  socialSecurity
+  + PAYE
+  + welfare
+  + unionDues
+  + support
+  + latenessDeduction
+  + absenteeismDeduction
+  + providentDeduction35
+  + providentDeduction165
+
+Net salary:
+netSalary = grossEarnings - totalDeductions
+
+Loan outstanding:
+outstanding = loanAmount - totalPaid
+
+
+7) ROUNDING AND EXPORT/REPORT BEHAVIOR
+--------------------------------------
+- Monetary outputs are rounded to 2 decimal places.
+- Zero values are omitted in downloads:
+  - CSV/PDF table exports convert zero numeric cells to blank.
+  - JSON exports remove keys where numeric value is zero.
+- Styled payslip PDF also omits zero rows in earnings/deductions sections.
+
+
+8) DEFAULT FORM STATE
+---------------------
+- Name: "Ama Owusu"
+- Basic salary: "20000"
+- Included by default:
+  - Transport 25%
+  - Utility 15%
+  - Rent 20%
+  - Risk 10%
+- Not included by default:
+  - Leave 100%
+  - Clothing 0%
+- All override checkboxes start OFF.

@@ -18,7 +18,7 @@ const tools: Tool[] = [
     href: "/tools/tax",
     external: false,
     code: "TX",
-    accent: "#e96f4a"
+    accent: "#1d4ed8"
   },
   {
     title: "Cash Desk",
@@ -27,7 +27,7 @@ const tools: Tool[] = [
     href: "/tools/cash-desk",
     external: false,
     code: "CD",
-    accent: "#2f7e89"
+    accent: "#2563eb"
   },
   {
     title: "Salary Calculator",
@@ -36,7 +36,7 @@ const tools: Tool[] = [
     href: "/tools/salary",
     external: false,
     code: "PY",
-    accent: "#2d8f60"
+    accent: "#3b82f6"
   },
   {
     title: "GB Calculator",
@@ -45,7 +45,7 @@ const tools: Tool[] = [
     href: "/tools/gb-calculator",
     external: false,
     code: "PS",
-    accent: "#b05f2d"
+    accent: "#1e40af"
   },
   {
     title: "Ledgerly",
@@ -54,7 +54,7 @@ const tools: Tool[] = [
     href: "https://ledgerly.levelsfield.com",
     external: true,
     code: "LG",
-    accent: "#855ad8"
+    accent: "#60a5fa"
   }
 ];
 
@@ -62,10 +62,8 @@ export default function Home() {
   return (
     <main className="min-h-screen px-6 py-14 md:px-10">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10">
-        <section className="relative overflow-hidden rounded-3xl border border-[color:var(--card-border)] bg-[color:var(--card-bg)] px-6 py-8 shadow-card backdrop-blur md:px-10 md:py-10">
-          <div className="pointer-events-none absolute inset-0 border border-[color:var(--border-subtle)]/60" />
-
-          <div className="relative flex flex-col gap-8">
+        <section className="rounded-2xl border border-[color:var(--card-border)] bg-[color:var(--card-bg)] px-6 py-8 md:px-10 md:py-10">
+          <div className="flex flex-col gap-8">
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--accent)]">
                 Levelsfield Workspace
@@ -107,7 +105,7 @@ export default function Home() {
         <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {tools.map((tool) => {
             const card = (
-              <article className="group flex h-full flex-col justify-between rounded-2xl border border-[color:var(--card-border)] bg-[color:var(--card-bg)] p-5 shadow-card backdrop-blur transition duration-200 hover:-translate-y-1 hover:shadow-card-hover">
+              <article className="group flex h-full flex-col justify-between rounded-2xl border border-[color:var(--card-border)] bg-[color:var(--card-bg)] p-5">
                 <div className="space-y-4">
                   <div className="flex items-start justify-between gap-3">
                     <span
@@ -137,9 +135,9 @@ export default function Home() {
                 </div>
 
                 <div className="mt-8">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-[color:var(--accent-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--accent-strong)]">
+                  <span className="inline-flex items-center gap-2 rounded-md border border-[color:var(--accent-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--accent-strong)]">
                     Open Tool
-                    <span className="transition group-hover:translate-x-1" aria-hidden="true">
+                    <span aria-hidden="true">
                       {"->"}
                     </span>
                   </span>
