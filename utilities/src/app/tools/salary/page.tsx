@@ -52,6 +52,7 @@ type Html2Canvas = (
 type SalaryForm = {
   name: string;
   basic: string;
+  includeEmployeeSsnit: boolean;
   food: string;
   transportation: string;
   utilities: string;
@@ -63,6 +64,7 @@ type SalaryForm = {
 type SalaryEntry = {
   id: string;
   name: string;
+  includeEmployeeSsnit: boolean;
   basic: number;
   allowances: number;
   gross: number;
@@ -113,6 +115,7 @@ const calculateChargeableFromNet = (netPay: number) => {
 const initialForm: SalaryForm = {
   name: "",
   basic: "",
+  includeEmployeeSsnit: true,
   food: "",
   transportation: "",
   utilities: "",
@@ -128,6 +131,8 @@ export default function SalaryCalculatorPage() {
   const [reportFormat, setReportFormat] = useState<ReportFormat>("pdf");
   const [reverseNetPay, setReverseNetPay] = useState<string>("");
   const [reverseBasic, setReverseBasic] = useState<string>("");
+  const [reverseIncludeEmployeeSsnit, setReverseIncludeEmployeeSsnit] =
+    useState<boolean>(true);
   const summaryRef = useRef<HTMLDivElement | null>(null);
 
   const calculations = useMemo(() => {
@@ -139,7 +144,9 @@ export default function SalaryCalculatorPage() {
       toNumber(form.rent) +
       toNumber(form.others);
     const gross = basic + allowances;
-    const employeeSsnit = basic * EMPLOYEE_SSNIT_RATE;
+    const employeeSsnit = form.includeEmployeeSsnit
+      ? basic * EMPLOYEE_SSNIT_RATE
+      : 0;
     const chargeable = Math.max(0, gross - employeeSsnit);
     const paye = calculatePaye(chargeable);
     const loan = toNumber(form.loan);
@@ -151,6 +158,7 @@ export default function SalaryCalculatorPage() {
       basic: roundMoney(basic),
       allowances: roundMoney(allowances),
       gross: roundMoney(gross),
+      includeEmployeeSsnit: form.includeEmployeeSsnit,
       employeeSsnit: roundMoney(employeeSsnit),
       chargeable: roundMoney(chargeable),
       paye: roundMoney(paye),
@@ -170,6 +178,7 @@ export default function SalaryCalculatorPage() {
         gross: 0,
         chargeable: 0,
         paye: 0,
+        includeEmployeeSsnit: reverseIncludeEmployeeSsnit,
         employeeSsnit: 0,
         employerSsnit: 0,
         netPay: 0
@@ -179,12 +188,17 @@ export default function SalaryCalculatorPage() {
     const chargeable = calculateChargeableFromNet(net);
     const inputBasic = toNumber(reverseBasic);
     const baseForSsnit = inputBasic > 0 ? inputBasic : 0;
-    const employeeSsnit =
-      baseForSsnit > 0 ? baseForSsnit * EMPLOYEE_SSNIT_RATE : 0;
+    const employeeSsnit = reverseIncludeEmployeeSsnit
+      ? baseForSsnit > 0
+        ? baseForSsnit * EMPLOYEE_SSNIT_RATE
+        : 0
+      : 0;
     const gross =
       baseForSsnit > 0
         ? chargeable + employeeSsnit
-        : chargeable / (1 - EMPLOYEE_SSNIT_RATE);
+        : reverseIncludeEmployeeSsnit
+          ? chargeable / (1 - EMPLOYEE_SSNIT_RATE)
+          : chargeable;
     const basic = baseForSsnit > 0 ? baseForSsnit : gross;
     const allowances = roundMoney(gross - basic);
     const paye = calculatePaye(chargeable);
@@ -196,11 +210,12 @@ export default function SalaryCalculatorPage() {
       gross: roundMoney(gross),
       chargeable: roundMoney(chargeable),
       paye: roundMoney(paye),
+      includeEmployeeSsnit: reverseIncludeEmployeeSsnit,
       employeeSsnit: roundMoney(employeeSsnit),
       employerSsnit: roundMoney(employerSsnit),
       netPay: roundMoney(net)
     };
-  }, [reverseNetPay, reverseBasic]);
+  }, [reverseBasic, reverseIncludeEmployeeSsnit, reverseNetPay]);
 
   const updateField = (field: keyof SalaryForm, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -216,6 +231,7 @@ export default function SalaryCalculatorPage() {
     const entry: SalaryEntry = {
       id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
       name,
+      includeEmployeeSsnit: calculations.includeEmployeeSsnit,
       basic: calculations.basic,
       allowances: calculations.allowances,
       gross: calculations.gross,
@@ -250,13 +266,13 @@ export default function SalaryCalculatorPage() {
       `Other allowance: ${formatMoney(toNumber(form.others))}`,
       `Allowances total: ${formatMoney(calculations.allowances)}`,
       `Gross pay: ${formatMoney(calculations.gross)}`,
-      `Employee SSNIT (5.5%): ${formatMoney(calculations.employeeSsnit)}`,
+      `Employee SSF (5.5%): ${calculations.includeEmployeeSsnit ? formatMoney(calculations.employeeSsnit) : "Off"}`,
       `Chargeable income: ${formatMoney(calculations.chargeable)}`,
       `PAYE: ${formatMoney(calculations.paye)}`,
       `Loan deductions: ${formatMoney(calculations.loan)}`,
       `Total deductions: ${formatMoney(calculations.totalDeductions)}`,
       `Net pay: ${formatMoney(calculations.netPay)}`,
-      `Employer SSNIT (13%): ${formatMoney(calculations.employerSsnit)}`
+      `Employer SSF (13%): ${formatMoney(calculations.employerSsnit)}`
     ];
     return lines.join("\n");
   };
@@ -402,9 +418,9 @@ export default function SalaryCalculatorPage() {
           "Tier 2 Total (13.5%)"
         ],
         rows: entries.map((entry) => {
-          const tier2Employee = roundMoney(entry.basic * EMPLOYEE_SSNIT_RATE);
+          const tier2Employee = roundMoney(entry.employeeSsnit);
           const tier2Employer = roundMoney(entry.basic * EMPLOYER_TIER2_RATE);
-          const tier2Total = roundMoney(entry.basic * TIER2_TOTAL_RATE);
+          const tier2Total = roundMoney(tier2Employee + tier2Employer);
           return [
             entry.name,
             roundMoney(entry.basic),
@@ -416,9 +432,10 @@ export default function SalaryCalculatorPage() {
         json: entries.map((entry) => ({
           employee: entry.name,
           basic_salary: roundMoney(entry.basic),
-          tier_2_employee: roundMoney(entry.basic * EMPLOYEE_SSNIT_RATE),
+          include_employee_ssf: entry.includeEmployeeSsnit !== false,
+          tier_2_employee: roundMoney(entry.employeeSsnit),
           tier_2_employer: roundMoney(entry.basic * EMPLOYER_TIER2_RATE),
-          tier_2_total: roundMoney(entry.basic * TIER2_TOTAL_RATE)
+          tier_2_total: roundMoney(entry.employeeSsnit + entry.basic * EMPLOYER_TIER2_RATE)
         }))
       };
     }
@@ -437,9 +454,9 @@ export default function SalaryCalculatorPage() {
         ],
         rows: entries.map((entry) => {
           const tier1 = roundMoney(entry.basic * EMPLOYER_TIER1_RATE);
-          const tier2Employee = roundMoney(entry.basic * EMPLOYEE_SSNIT_RATE);
+          const tier2Employee = roundMoney(entry.employeeSsnit);
           const tier2Employer = roundMoney(entry.basic * EMPLOYER_TIER2_RATE);
-          const tier2Total = roundMoney(entry.basic * TIER2_TOTAL_RATE);
+          const tier2Total = roundMoney(tier2Employee + tier2Employer);
           return [
             entry.name,
             roundMoney(entry.basic),
@@ -452,10 +469,11 @@ export default function SalaryCalculatorPage() {
         json: entries.map((entry) => ({
           employee: entry.name,
           basic_salary: roundMoney(entry.basic),
+          include_employee_ssf: entry.includeEmployeeSsnit !== false,
           tier_1_employer: roundMoney(entry.basic * EMPLOYER_TIER1_RATE),
-          tier_2_employee: roundMoney(entry.basic * EMPLOYEE_SSNIT_RATE),
+          tier_2_employee: roundMoney(entry.employeeSsnit),
           tier_2_employer: roundMoney(entry.basic * EMPLOYER_TIER2_RATE),
-          tier_2_total: roundMoney(entry.basic * TIER2_TOTAL_RATE)
+          tier_2_total: roundMoney(entry.employeeSsnit + entry.basic * EMPLOYER_TIER2_RATE)
         }))
       };
     }
@@ -468,18 +486,20 @@ export default function SalaryCalculatorPage() {
         "Basic Salary",
         "Allowances",
         "Gross Pay",
-        "SSNIT Employee (5.5%)",
+        "Employee SSF Applied",
+        "SSF Employee (5.5%)",
         "PAYE",
         "Loan",
         "Total Deductions",
         "Net Pay",
-        "SSNIT Employer (13%)"
+        "SSF Employer (13%)"
       ],
       rows: entries.map((entry) => [
         entry.name,
         roundMoney(entry.basic),
         roundMoney(entry.allowances),
         roundMoney(entry.gross),
+        entry.includeEmployeeSsnit !== false ? "Yes" : "No",
         roundMoney(entry.employeeSsnit),
         roundMoney(entry.paye),
         roundMoney(entry.loan),
@@ -492,6 +512,7 @@ export default function SalaryCalculatorPage() {
         basic_salary: roundMoney(entry.basic),
         allowances: roundMoney(entry.allowances),
         gross_pay: roundMoney(entry.gross),
+          include_employee_ssf: entry.includeEmployeeSsnit !== false,
         ssnit_employee: roundMoney(entry.employeeSsnit),
         paye: roundMoney(entry.paye),
         loan: roundMoney(entry.loan),
@@ -587,9 +608,9 @@ export default function SalaryCalculatorPage() {
             Salary Calculator
           </h1>
           <p className="max-w-3xl text-sm text-[color:var(--text-secondary)] md:text-base">
-            Ghana PAYE (2024) with SSNIT 5.5% employee deductions and 13% employer
-            contribution. Enter pay details below and add each
-            employee to the table.
+            Ghana PAYE (2024) with optional employee SSF 5.5% deductions and 13%
+            employer contribution. Enter pay details below and add each employee
+            to the table.
           </p>
         </header>
 
@@ -640,6 +661,19 @@ export default function SalaryCalculatorPage() {
                   placeholder="0.00"
                   className="mt-2 w-full rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--text-tertiary)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none"
                 />
+                <label className="mt-3 inline-flex items-center gap-2 text-xs text-[color:var(--text-secondary)]">
+                  <input
+                    type="checkbox"
+                    checked={form.includeEmployeeSsnit}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        includeEmployeeSsnit: e.target.checked
+                      }))
+                    }
+                  />
+                  Deduct employee SSF (5.5%)
+                </label>
               </div>
 
               <div>
@@ -745,7 +779,7 @@ export default function SalaryCalculatorPage() {
                 </p>
                 <h2 className="text-xl font-semibold text-[color:var(--text-primary)]">Auto-calculated</h2>
                 <p className="text-sm text-[color:var(--text-secondary)]">
-                  Gross pay, SSNIT, PAYE, total deductions, and net pay update as you
+                  Gross pay, SSF, PAYE, total deductions, and net pay update as you
                   type.
                 </p>
               </div>
@@ -787,9 +821,11 @@ export default function SalaryCalculatorPage() {
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[color:var(--text-secondary)]">Employee SSNIT (5.5%)</span>
+                <span className="text-[color:var(--text-secondary)]">Employee SSF (5.5%)</span>
                 <span className="font-semibold text-[color:var(--text-primary)]">
-                  {formatMoney(calculations.employeeSsnit)}
+                  {calculations.includeEmployeeSsnit
+                    ? formatMoney(calculations.employeeSsnit)
+                    : "Off"}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
@@ -823,7 +859,7 @@ export default function SalaryCalculatorPage() {
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs text-[color:var(--text-secondary)]">
-                <span>Employer SSNIT (13%)</span>
+                <span>Employer SSF (13%)</span>
                 <span className="font-semibold text-[color:var(--text-primary)]">
                   {formatMoney(calculations.employerSsnit)}
                 </span>
@@ -855,12 +891,13 @@ export default function SalaryCalculatorPage() {
                   <th className="py-3 pr-4">Basic</th>
                   <th className="py-3 pr-4">Allowances</th>
                   <th className="py-3 pr-4">Gross</th>
-                  <th className="py-3 pr-4">SSNIT Employee (5.5%)</th>
+                  <th className="py-3 pr-4">SSF Employee Applied</th>
+                  <th className="py-3 pr-4">SSF Employee (5.5%)</th>
                   <th className="py-3 pr-4">PAYE</th>
                   <th className="py-3 pr-4">Loan</th>
                   <th className="py-3 pr-4">Deductions</th>
                   <th className="py-3 pr-4">Net Pay</th>
-                  <th className="py-3 pr-4">SSNIT Employer (13%)</th>
+                  <th className="py-3 pr-4">SSF Employer (13%)</th>
                   <th className="py-3 text-right">Action</th>
                 </tr>
               </thead>
@@ -868,7 +905,7 @@ export default function SalaryCalculatorPage() {
                 {entries.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={11}
+                      colSpan={12}
                       className="py-6 text-center text-sm text-[color:var(--text-secondary)]"
                     >
                       No employees added yet.
@@ -883,6 +920,9 @@ export default function SalaryCalculatorPage() {
                       <td className="py-3 pr-4">{formatMoney(entry.basic)}</td>
                       <td className="py-3 pr-4">{formatMoney(entry.allowances)}</td>
                       <td className="py-3 pr-4">{formatMoney(entry.gross)}</td>
+                      <td className="py-3 pr-4">
+                        {entry.includeEmployeeSsnit !== false ? "Yes" : "No"}
+                      </td>
                       <td className="py-3 pr-4">{formatMoney(entry.employeeSsnit)}</td>
                       <td className="py-3 pr-4">{formatMoney(entry.paye)}</td>
                       <td className="py-3 pr-4">{formatMoney(entry.loan)}</td>
@@ -953,6 +993,14 @@ export default function SalaryCalculatorPage() {
               <p className="mt-2 text-xs text-[color:var(--text-secondary)]">
                 If provided, we estimate implied allowances from the net pay.
               </p>
+              <label className="mt-3 inline-flex items-center gap-2 text-xs text-[color:var(--text-secondary)]">
+                <input
+                  type="checkbox"
+                  checked={reverseIncludeEmployeeSsnit}
+                  onChange={(e) => setReverseIncludeEmployeeSsnit(e.target.checked)}
+                />
+                Deduct employee SSF (5.5%) in reverse calculation
+              </label>
             </div>
 
             <div className="grid gap-3 rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] p-4 text-sm">
@@ -981,9 +1029,11 @@ export default function SalaryCalculatorPage() {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[color:var(--text-secondary)]">Employee SSNIT (5.5%)</span>
+                <span className="text-[color:var(--text-secondary)]">Employee SSF (5.5%)</span>
                 <span className="font-semibold text-[color:var(--text-primary)]">
-                  {formatMoney(reverseCalculations.employeeSsnit)}
+                  {reverseCalculations.includeEmployeeSsnit
+                    ? formatMoney(reverseCalculations.employeeSsnit)
+                    : "Off"}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -993,7 +1043,7 @@ export default function SalaryCalculatorPage() {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[color:var(--text-secondary)]">Employer SSNIT (13%)</span>
+                <span className="text-[color:var(--text-secondary)]">Employer SSF (13%)</span>
                 <span className="font-semibold text-[color:var(--text-primary)]">
                   {formatMoney(reverseCalculations.employerSsnit)}
                 </span>

@@ -32,6 +32,36 @@ const formatPdfMoney = (value: number) =>
 const formatPercent = (value: number) =>
   `${roundMoney(value).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}%`;
 const isZeroAmount = (value: number) => roundMoney(value) === 0;
+type CustomLineItemForm = {
+  id: string;
+  label: string;
+  amount: string;
+};
+type CustomLineItem = {
+  id: string;
+  label: string;
+  amount: number;
+};
+const createCustomLineItemForm = (): CustomLineItemForm => ({
+  id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+  label: "",
+  amount: "",
+});
+const normalizeCustomLineItems = (
+  items: CustomLineItemForm[],
+  fallbackPrefix: string,
+) =>
+  items.reduce<CustomLineItem[]>((result, item, index) => {
+    const amount = roundMoney(toNumber(item.amount));
+    const label = item.label.trim();
+    if (!label && isZeroAmount(amount)) return result;
+    result.push({
+      id: item.id,
+      label: label || `${fallbackPrefix} ${index + 1}`,
+      amount,
+    });
+    return result;
+  }, []);
 const calculatePaye = (chargeable: number) => {
   const income = Math.max(0, chargeable);
   if (income <= 490) return 0;
@@ -54,6 +84,7 @@ type Html2Canvas = (
 type PayslipForm = {
   name: string;
   basic: string;
+  includeEmployeeSsnit: boolean;
   includeTransportAllowance: boolean;
   transportRate: string;
   transport: string;
@@ -81,11 +112,14 @@ type PayslipForm = {
   support: string;
   loanAmount: string;
   totalPaid: string;
+  customEarnings: CustomLineItemForm[];
+  customDeductions: CustomLineItemForm[];
 };
 type PayslipEntry = {
   id: string;
   name: string;
   basic: number;
+  includeEmployeeSsnit: boolean;
   includeTransportAllowance: boolean;
   transportRate: number;
   transport: number;
@@ -130,6 +164,10 @@ type PayslipEntry = {
   loanAmount: number;
   totalPaid: number;
   outstanding: number;
+  customEarnings: CustomLineItem[];
+  customDeductions: CustomLineItem[];
+  customEarningsTotal: number;
+  customDeductionsTotal: number;
 };
 type ReportType = "payroll" | "paye" | "deductions" | "loan" | "slip";
 type ReportFormat = "pdf" | "csv" | "json";
@@ -152,6 +190,7 @@ const initialAllowanceOverrides: AllowanceOverrideState = {
 const initialForm: PayslipForm = {
   name: "Ama Owusu",
   basic: "20000",
+  includeEmployeeSsnit: true,
   includeTransportAllowance: true,
   transportRate: String(DEFAULT_TRANSPORT_RATE_PERCENT),
   transport: "",
@@ -179,6 +218,8 @@ const initialForm: PayslipForm = {
   support: "",
   loanAmount: "",
   totalPaid: "",
+  customEarnings: [],
+  customDeductions: [],
 };
 export default function PayslipPage() {
   const [form, setForm] = useState<PayslipForm>(initialForm);
@@ -251,6 +292,22 @@ export default function PayslipPage() {
     const support = toNumber(form.support);
     const loanAmount = toNumber(form.loanAmount);
     const totalPaid = toNumber(form.totalPaid);
+    const customEarnings = normalizeCustomLineItems(
+      form.customEarnings,
+      "Custom earning",
+    );
+    const customDeductions = normalizeCustomLineItems(
+      form.customDeductions,
+      "Custom deduction",
+    );
+    const customEarningsTotal = customEarnings.reduce(
+      (sum, item) => sum + item.amount,
+      0,
+    );
+    const customDeductionsTotal = customDeductions.reduce(
+      (sum, item) => sum + item.amount,
+      0,
+    );
     const providentEarning35 = basic * PF_EARN_35_RATE;
     const providentEarning65 = basic * PF_EARN_65_RATE;
     const grossEarnings =
@@ -263,9 +320,12 @@ export default function PayslipPage() {
       clothingAllowance +
       otherEarnings +
       overtimeAddition +
+      customEarningsTotal +
       providentEarning35 +
       providentEarning65;
-    const socialSecurity = basic * SOCIAL_SECURITY_RATE;
+    const socialSecurity = form.includeEmployeeSsnit
+      ? basic * SOCIAL_SECURITY_RATE
+      : 0;
     const providentDeduction35 = basic * PF_DED_35_RATE;
     const providentDeduction165 = basic * PF_DED_165_RATE;
     const taxableIncome = Math.max(
@@ -281,12 +341,14 @@ export default function PayslipPage() {
       support +
       latenessDeduction +
       absenteeismDeduction +
+      customDeductionsTotal +
       providentDeduction35 +
       providentDeduction165;
     const netSalary = grossEarnings - totalDeductions;
     const outstanding = loanAmount - totalPaid;
     return {
       basic: roundMoney(basic),
+      includeEmployeeSsnit: form.includeEmployeeSsnit,
       includeTransportAllowance: form.includeTransportAllowance,
       transportRate: roundMoney(transportRate),
       transport: roundMoney(transport),
@@ -320,6 +382,10 @@ export default function PayslipPage() {
       support: roundMoney(support),
       latenessDeduction: roundMoney(latenessDeduction),
       absenteeismDeduction: roundMoney(absenteeismDeduction),
+      customEarnings,
+      customDeductions,
+      customEarningsTotal: roundMoney(customEarningsTotal),
+      customDeductionsTotal: roundMoney(customDeductionsTotal),
       totalDeductions: roundMoney(totalDeductions),
       netSalary: roundMoney(netSalary),
       loanAmount: roundMoney(loanAmount),
@@ -357,6 +423,7 @@ export default function PayslipPage() {
   const toFormFromEntry = (entry: PayslipEntry): PayslipForm => ({
     name: entry.name,
     basic: toInputValue(entry.basic),
+    includeEmployeeSsnit: entry.includeEmployeeSsnit ?? true,
     includeTransportAllowance: entry.includeTransportAllowance ?? true,
     transportRate: toInputValue(
       entry.transportRate ?? DEFAULT_TRANSPORT_RATE_PERCENT,
@@ -392,7 +459,45 @@ export default function PayslipPage() {
     support: toInputValue(entry.support),
     loanAmount: toInputValue(entry.loanAmount),
     totalPaid: toInputValue(entry.totalPaid),
+    customEarnings: (entry.customEarnings ?? []).map((item) => ({
+      id: item.id,
+      label: item.label,
+      amount: toInputValue(item.amount),
+    })),
+    customDeductions: (entry.customDeductions ?? []).map((item) => ({
+      id: item.id,
+      label: item.label,
+      amount: toInputValue(item.amount),
+    })),
   });
+  const updateCustomLineItem = (
+    type: "customEarnings" | "customDeductions",
+    id: string,
+    field: "label" | "amount",
+    value: string,
+  ) => {
+    setForm((prev) => ({
+      ...prev,
+      [type]: prev[type].map((item) =>
+        item.id === id ? { ...item, [field]: value } : item,
+      ),
+    }));
+  };
+  const addCustomLineItem = (type: "customEarnings" | "customDeductions") => {
+    setForm((prev) => ({
+      ...prev,
+      [type]: [...prev[type], createCustomLineItemForm()],
+    }));
+  };
+  const removeCustomLineItem = (
+    type: "customEarnings" | "customDeductions",
+    id: string,
+  ) => {
+    setForm((prev) => ({
+      ...prev,
+      [type]: prev[type].filter((item) => item.id !== id),
+    }));
+  };
   const buildEntrySummaryText = (entry: PayslipEntry) => {
     const lines = [
       `GB Calculator Summary - ${entry.name}`,
@@ -405,10 +510,13 @@ export default function PayslipPage() {
       `Clothing allowance (${formatPercent(entry.clothingRate)} of basic): ${entry.includeClothingAllowance ? formatMoney(entry.clothingAllowance) : "Off"}`,
       `Other earnings: ${formatMoney(entry.otherEarnings)}`,
       `Overtime addition: ${formatMoney(entry.overtimeAddition)}`,
+      ...(entry.customEarnings ?? []).map(
+        (item) => `Custom earning - ${item.label}: ${formatMoney(item.amount)}`,
+      ),
       `Provident earning 3.5%: ${formatMoney(entry.providentEarning35)}`,
       `Provident earning 6.5%: ${formatMoney(entry.providentEarning65)}`,
       `Gross earnings: ${formatMoney(entry.grossEarnings)}`,
-      `Social security 5.5%: ${formatMoney(entry.socialSecurity)}`,
+      `Employee SSF (5.5%): ${entry.includeEmployeeSsnit !== false ? formatMoney(entry.socialSecurity) : "Off"}`,
       `Provident deduction 16.5% (pre-tax): ${formatMoney(entry.providentDeduction165)}`,
       `Taxable income: ${formatMoney(entry.taxableIncome)}`,
       `PAYE: ${formatMoney(entry.paye)}`,
@@ -418,6 +526,10 @@ export default function PayslipPage() {
       `Support: ${formatMoney(entry.support)}`,
       `Lateness deduction: ${formatMoney(entry.latenessDeduction)}`,
       `Absenteeism deduction: ${formatMoney(entry.absenteeismDeduction)}`,
+      ...(entry.customDeductions ?? []).map(
+        (item) =>
+          `Custom deduction - ${item.label}: ${formatMoney(item.amount)}`,
+      ),
       `Total deductions: ${formatMoney(entry.totalDeductions)}`,
       `Net salary: ${formatMoney(entry.netSalary)}`,
       `Loan amount: ${formatMoney(entry.loanAmount)}`,
@@ -441,6 +553,7 @@ export default function PayslipPage() {
       id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
       name,
       basic: calculations.basic,
+      includeEmployeeSsnit: calculations.includeEmployeeSsnit,
       includeTransportAllowance: calculations.includeTransportAllowance,
       transportRate: calculations.transportRate,
       transport: calculations.transport,
@@ -480,6 +593,10 @@ export default function PayslipPage() {
       support: calculations.support,
       latenessDeduction: calculations.latenessDeduction,
       absenteeismDeduction: calculations.absenteeismDeduction,
+      customEarnings: calculations.customEarnings,
+      customDeductions: calculations.customDeductions,
+      customEarningsTotal: calculations.customEarningsTotal,
+      customDeductionsTotal: calculations.customDeductionsTotal,
       totalDeductions: calculations.totalDeductions,
       netSalary: calculations.netSalary,
       loanAmount: calculations.loanAmount,
@@ -545,10 +662,13 @@ export default function PayslipPage() {
       `Clothing allowance (${formatPercent(calculations.clothingRate)} of basic): ${calculations.includeClothingAllowance ? formatMoney(calculations.clothingAllowance) : "Off"}`,
       `Other earnings: ${formatMoney(calculations.otherEarnings)}`,
       `Overtime addition: ${formatMoney(calculations.overtimeAddition)}`,
+      ...calculations.customEarnings.map(
+        (item) => `Custom earning - ${item.label}: ${formatMoney(item.amount)}`,
+      ),
       `Provident earning 3.5%: ${formatMoney(calculations.providentEarning35)}`,
       `Provident earning 6.5%: ${formatMoney(calculations.providentEarning65)}`,
       `Gross earnings: ${formatMoney(calculations.grossEarnings)}`,
-      `Social security 5.5%: ${formatMoney(calculations.socialSecurity)}`,
+      `Employee SSF (5.5%): ${calculations.includeEmployeeSsnit ? formatMoney(calculations.socialSecurity) : "Off"}`,
       `Provident deduction 16.5% (pre-tax): ${formatMoney(calculations.providentDeduction165)}`,
       `Taxable income: ${formatMoney(calculations.taxableIncome)}`,
       `PAYE: ${formatMoney(calculations.paye)}`,
@@ -558,6 +678,10 @@ export default function PayslipPage() {
       `Support: ${formatMoney(calculations.support)}`,
       `Lateness deduction: ${formatMoney(calculations.latenessDeduction)}`,
       `Absenteeism deduction: ${formatMoney(calculations.absenteeismDeduction)}`,
+      ...calculations.customDeductions.map(
+        (item) =>
+          `Custom deduction - ${item.label}: ${formatMoney(item.amount)}`,
+      ),
       `Total deductions: ${formatMoney(calculations.totalDeductions)}`,
       `Net salary: ${formatMoney(calculations.netSalary)}`,
       `Loan amount: ${formatMoney(calculations.loanAmount)}`,
@@ -648,6 +772,72 @@ export default function PayslipPage() {
       alert("Unable to copy snapshot. Please try again.");
     }
   };
+  const renderCustomLineItemSection = (
+    title: string,
+    description: string,
+    type: "customEarnings" | "customDeductions",
+  ) => (
+    <div className="md:col-span-2 rounded-xl border border-[color:var(--border-subtle)] p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-[color:var(--text-tertiary)]">
+            {title}
+          </h3>
+          <p className="mt-1 text-xs text-[color:var(--text-secondary)]">
+            {description}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => addCustomLineItem(type)}
+          className="rounded-md border border-[color:var(--border-default)] px-3 py-1 text-xs font-semibold text-[color:var(--accent-strong)]"
+        >
+          Add item
+        </button>
+      </div>
+      <div className="mt-4 grid gap-3">
+        {form[type].length === 0 ? (
+          <p className="text-sm text-[color:var(--text-secondary)]">
+            No custom items added yet.
+          </p>
+        ) : (
+          form[type].map((item) => (
+            <div
+              key={item.id}
+              className="grid gap-2 rounded-xl border border-[color:var(--border-default)] p-3 md:grid-cols-[minmax(0,1fr)_180px_auto]"
+            >
+              <input
+                type="text"
+                value={item.label}
+                onChange={(e) =>
+                  updateCustomLineItem(type, item.id, "label", e.target.value)
+                }
+                placeholder="Item name"
+                className="w-full rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--text-tertiary)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none"
+              />
+              <input
+                type="text"
+                inputMode="decimal"
+                value={item.amount}
+                onChange={(e) =>
+                  updateCustomLineItem(type, item.id, "amount", e.target.value)
+                }
+                placeholder="0.00"
+                className="w-full rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--text-tertiary)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => removeCustomLineItem(type, item.id)}
+                className="rounded-md border border-[color:var(--border-default)] px-3 py-2 text-xs font-semibold text-[color:var(--text-secondary)]"
+              >
+                Remove
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
   const buildReport = (type: ReportType) => {
     const date = new Date();
     const y = date.getFullYear();
@@ -679,7 +869,7 @@ export default function PayslipPage() {
         filename: `gb-calculator-deductions-report-${dateStamp}`,
         headers: [
           "Employee",
-          "Social Security (5.5%)",
+          "Employee SSF (5.5%)",
           "Provident Ded. 3.5%",
           "Provident Ded. 16.5%",
           "Welfare",
@@ -687,6 +877,7 @@ export default function PayslipPage() {
           "Support",
           "Lateness Deduction",
           "Absenteeism Deduction",
+          "Custom Deductions",
           "PAYE",
           "Total Deductions",
           "Net Salary",
@@ -701,6 +892,7 @@ export default function PayslipPage() {
           roundMoney(entry.support),
           roundMoney(entry.latenessDeduction),
           roundMoney(entry.absenteeismDeduction),
+          roundMoney(entry.customDeductionsTotal),
           roundMoney(entry.paye),
           roundMoney(entry.totalDeductions),
           roundMoney(entry.netSalary),
@@ -715,6 +907,11 @@ export default function PayslipPage() {
           support: roundMoney(entry.support),
           lateness_deduction: roundMoney(entry.latenessDeduction),
           absenteeism_deduction: roundMoney(entry.absenteeismDeduction),
+          custom_deductions_total: roundMoney(entry.customDeductionsTotal),
+          custom_deductions: (entry.customDeductions ?? []).map((item) => ({
+            label: item.label,
+            amount: roundMoney(item.amount),
+          })),
           paye: roundMoney(entry.paye),
           total_deductions: roundMoney(entry.totalDeductions),
           net_salary: roundMoney(entry.netSalary),
@@ -784,6 +981,7 @@ export default function PayslipPage() {
         "Clothing Allowance (% of Basic)",
         "Other Earnings",
         "Overtime Addition",
+        "Custom Additions",
         "Prov. Earn 3.5%",
         "Prov. Earn 6.5%",
         "Gross Earnings",
@@ -791,6 +989,7 @@ export default function PayslipPage() {
         "PAYE",
         "Lateness Deduction",
         "Absenteeism Deduction",
+        "Custom Deductions",
         "Total Deductions",
         "Net Salary",
         "Loan Amount",
@@ -808,6 +1007,7 @@ export default function PayslipPage() {
         roundMoney(entry.clothingAllowance),
         roundMoney(entry.otherEarnings),
         roundMoney(entry.overtimeAddition),
+        roundMoney(entry.customEarningsTotal),
         roundMoney(entry.providentEarning35),
         roundMoney(entry.providentEarning65),
         roundMoney(entry.grossEarnings),
@@ -815,6 +1015,7 @@ export default function PayslipPage() {
         roundMoney(entry.paye),
         roundMoney(entry.latenessDeduction),
         roundMoney(entry.absenteeismDeduction),
+        roundMoney(entry.customDeductionsTotal),
         roundMoney(entry.totalDeductions),
         roundMoney(entry.netSalary),
         roundMoney(entry.loanAmount),
@@ -832,6 +1033,11 @@ export default function PayslipPage() {
         clothing_allowance: roundMoney(entry.clothingAllowance),
         other_earnings: roundMoney(entry.otherEarnings),
         overtime_addition: roundMoney(entry.overtimeAddition),
+        custom_earnings_total: roundMoney(entry.customEarningsTotal),
+        custom_earnings: (entry.customEarnings ?? []).map((item) => ({
+          label: item.label,
+          amount: roundMoney(item.amount),
+        })),
         provident_earning_35: roundMoney(entry.providentEarning35),
         provident_earning_65: roundMoney(entry.providentEarning65),
         gross_earnings: roundMoney(entry.grossEarnings),
@@ -839,6 +1045,11 @@ export default function PayslipPage() {
         paye: roundMoney(entry.paye),
         lateness_deduction: roundMoney(entry.latenessDeduction),
         absenteeism_deduction: roundMoney(entry.absenteeismDeduction),
+        custom_deductions_total: roundMoney(entry.customDeductionsTotal),
+        custom_deductions: (entry.customDeductions ?? []).map((item) => ({
+          label: item.label,
+          amount: roundMoney(item.amount),
+        })),
         total_deductions: roundMoney(entry.totalDeductions),
         net_salary: roundMoney(entry.netSalary),
         loan_amount: roundMoney(entry.loanAmount),
@@ -1087,6 +1298,11 @@ export default function PayslipPage() {
       earningsRows.push(
         ["OTHER EARNINGS", entry.otherEarnings],
         ["OVERTIME ADDITION", entry.overtimeAddition],
+      );
+      (entry.customEarnings ?? []).forEach((item) => {
+        earningsRows.push([item.label.toUpperCase(), item.amount]);
+      });
+      earningsRows.push(
         ["PROVIDENT EARNING (3.5%)", entry.providentEarning35],
         ["PROVIDENT EARNING (6.5%)", entry.providentEarning65],
       );
@@ -1094,16 +1310,21 @@ export default function PayslipPage() {
         (row): row is [string, number] => !isZeroAmount(row[1]),
       );
       const deductionRows: Array<[string, number]> = [
-        ["SOCIAL SECURITY (5.5%)", entry.socialSecurity],
+        ["EMPLOYEE SSF (5.5%)", entry.socialSecurity],
         ["PAYE", entry.paye],
         ["WELFARE FUND", entry.welfare],
         ["UNION DUES", entry.unionDues],
         ["PMSU/GMWU SUPPORT", entry.support],
         ["LATENESS DEDUCTION", entry.latenessDeduction],
         ["ABSENTEEISM DEDUCTION", entry.absenteeismDeduction],
+      ];
+      (entry.customDeductions ?? []).forEach((item) => {
+        deductionRows.push([item.label.toUpperCase(), item.amount]);
+      });
+      deductionRows.push(
         ["PROVIDENT DEDUCTION (3.5%)", entry.providentDeduction35],
         ["PROVIDENT DEDUCTION (16.5%)", entry.providentDeduction165],
-      ];
+      );
       const filteredDeductionRows: Array<[string, number]> =
         deductionRows.filter(
           (row): row is [string, number] => !isZeroAmount(row[1]),
@@ -1379,8 +1600,8 @@ export default function PayslipPage() {
             {" "}
             Payroll aligned to your slip: provident earning lines (3.5% and
             6.5%) are included in gross earnings, taxable income is calculated
-            as gross minus Social Security (5.5%) and Provident Deduction
-            (16.5%), then PAYE is applied.{" "}
+            as gross minus optional employee SSF (5.5%) and Provident
+            Deduction (16.5%), then PAYE is applied.{" "}
           </p>{" "}
         </header>{" "}
         <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -1458,6 +1679,16 @@ export default function PayslipPage() {
                   placeholder="0.00"
                   className="mt-2 w-full rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--text-tertiary)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none"
                 />{" "}
+                <label className="mt-3 inline-flex items-center gap-2 text-xs text-[color:var(--text-secondary)]">
+                  <input
+                    type="checkbox"
+                    checked={form.includeEmployeeSsnit}
+                    onChange={(e) =>
+                      updateField("includeEmployeeSsnit", e.target.checked)
+                    }
+                  />
+                  Deduct employee SSF (5.5%)
+                </label>{" "}
               </div>{" "}
               <div>
                 {" "}
@@ -1900,6 +2131,11 @@ export default function PayslipPage() {
                   className="mt-2 w-full rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--text-tertiary)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none"
                 />{" "}
               </div>{" "}
+              {renderCustomLineItemSection(
+                "Custom earnings",
+                "Add extra earning lines that should increase gross earnings and taxable income.",
+                "customEarnings",
+              )}{" "}
               <div>
                 {" "}
                 <label className="text-sm font-semibold text-[color:var(--text-tertiary)]">
@@ -1975,6 +2211,11 @@ export default function PayslipPage() {
                   className="mt-2 w-full rounded-xl border border-[color:var(--border-default)] bg-[color:var(--surface)] px-3 py-2 text-sm text-[color:var(--text-tertiary)] shadow-sm focus:border-[color:var(--accent)] focus:outline-none"
                 />{" "}
               </div>{" "}
+              {renderCustomLineItemSection(
+                "Custom deductions",
+                "Add extra deduction lines that should reduce net salary after tax has been calculated.",
+                "customDeductions",
+              )}{" "}
               <div>
                 {" "}
                 <label className="text-sm font-semibold text-[color:var(--text-tertiary)]">
@@ -2020,11 +2261,6 @@ export default function PayslipPage() {
                 <h2 className="text-xl font-semibold text-[color:var(--text-primary)]">
                   Auto-calculated
                 </h2>{" "}
-                <p className="text-sm text-[color:var(--text-secondary)]">
-                  {" "}
-                  Taxable = Gross - Social Security (5.5%) - Provident Deduction
-                  (16.5%).{" "}
-                </p>{" "}
               </div>{" "}
               <div className="flex flex-wrap gap-2">
                 {" "}
@@ -2154,6 +2390,19 @@ export default function PayslipPage() {
                   {formatMoney(calculations.overtimeAddition)}{" "}
                 </span>{" "}
               </div>{" "}
+              {calculations.customEarnings.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between"
+                >
+                  <span className="text-[color:var(--text-secondary)]">
+                    {item.label}
+                  </span>
+                  <span className="font-semibold text-[color:var(--text-primary)]">
+                    {formatMoney(item.amount)}
+                  </span>
+                </div>
+              ))}{" "}
               <div className="flex items-center justify-between">
                 {" "}
                 <span className="text-[color:var(--text-secondary)]">
@@ -2166,10 +2415,12 @@ export default function PayslipPage() {
               <div className="flex items-center justify-between">
                 {" "}
                 <span className="text-[color:var(--text-secondary)]">
-                  Social Security (5.5%)
+                  Employee SSF (5.5%)
                 </span>{" "}
                 <span className="font-semibold text-[color:var(--text-primary)]">
-                  {formatMoney(calculations.socialSecurity)}
+                  {calculations.includeEmployeeSsnit
+                    ? formatMoney(calculations.socialSecurity)
+                    : "Off"}
                 </span>{" "}
               </div>{" "}
               <div className="flex items-center justify-between">
@@ -2219,6 +2470,19 @@ export default function PayslipPage() {
                   {formatMoney(calculations.absenteeismDeduction)}{" "}
                 </span>{" "}
               </div>{" "}
+              {calculations.customDeductions.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between"
+                >
+                  <span className="text-[color:var(--text-secondary)]">
+                    {item.label}
+                  </span>
+                  <span className="font-semibold text-[color:var(--text-primary)]">
+                    {formatMoney(item.amount)}
+                  </span>
+                </div>
+              ))}{" "}
               <div className="flex items-center justify-between">
                 {" "}
                 <span className="text-[color:var(--text-secondary)]">
@@ -2267,7 +2531,7 @@ export default function PayslipPage() {
           </div>{" "}
           <div className="mt-5 overflow-x-auto">
             {" "}
-            <table className="min-w-[2300px] w-full border-collapse text-sm">
+            <table className="min-w-[2480px] w-full border-collapse text-sm">
               {" "}
               <thead>
                 {" "}
@@ -2283,10 +2547,11 @@ export default function PayslipPage() {
                   <th className="py-3 pr-4">Clothing (%)</th>{" "}
                   <th className="py-3 pr-4">Other Earnings</th>{" "}
                   <th className="py-3 pr-4">Overtime Add</th>{" "}
+                  <th className="py-3 pr-4">Custom Additions</th>{" "}
                   <th className="py-3 pr-4">Prov. Earn 3.5%</th>{" "}
                   <th className="py-3 pr-4">Prov. Earn 6.5%</th>{" "}
                   <th className="py-3 pr-4">Gross Earnings</th>{" "}
-                  <th className="py-3 pr-4">Social Security</th>{" "}
+                  <th className="py-3 pr-4">Employee SSF</th>{" "}
                   <th className="py-3 pr-4">Prov. Ded 3.5%</th>{" "}
                   <th className="py-3 pr-4">Prov. Ded 16.5%</th>{" "}
                   <th className="py-3 pr-4">Taxable Income</th>{" "}
@@ -2296,6 +2561,7 @@ export default function PayslipPage() {
                   <th className="py-3 pr-4">Support</th>{" "}
                   <th className="py-3 pr-4">Lateness Ded.</th>{" "}
                   <th className="py-3 pr-4">Absenteeism Ded.</th>{" "}
+                  <th className="py-3 pr-4">Custom Deductions</th>{" "}
                   <th className="py-3 pr-4">Total Deductions</th>{" "}
                   <th className="py-3 pr-4">Net Salary</th>{" "}
                   <th className="py-3 pr-4">Loan Amount</th>{" "}
@@ -2310,7 +2576,7 @@ export default function PayslipPage() {
                   <tr>
                     {" "}
                     <td
-                      colSpan={29}
+                      colSpan={31}
                       className="py-6 text-center text-sm text-[color:var(--text-secondary)]"
                     >
                       {" "}
@@ -2349,6 +2615,9 @@ export default function PayslipPage() {
                         {formatMoney(entry.overtimeAddition)}
                       </td>{" "}
                       <td className="py-3 pr-4">
+                        {formatMoney(entry.customEarningsTotal)}
+                      </td>{" "}
+                      <td className="py-3 pr-4">
                         {formatMoney(entry.providentEarning35)}
                       </td>{" "}
                       <td className="py-3 pr-4">
@@ -2384,6 +2653,9 @@ export default function PayslipPage() {
                       </td>{" "}
                       <td className="py-3 pr-4">
                         {formatMoney(entry.absenteeismDeduction)}
+                      </td>{" "}
+                      <td className="py-3 pr-4">
+                        {formatMoney(entry.customDeductionsTotal)}
                       </td>{" "}
                       <td className="py-3 pr-4">
                         {formatMoney(entry.totalDeductions)}
@@ -2700,6 +2972,17 @@ export default function PayslipPage() {
                       {formatMoney(viewingEntry.overtimeAddition)}
                     </span>{" "}
                   </div>{" "}
+                  {(viewingEntry.customEarnings ?? []).map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between"
+                    >
+                      <span>{item.label}</span>
+                      <span className="font-semibold">
+                        {formatMoney(item.amount)}
+                      </span>
+                    </div>
+                  ))}{" "}
                   <div className="flex items-center justify-between">
                     {" "}
                     <span>Prov. 3.5%</span>{" "}
@@ -2732,9 +3015,11 @@ export default function PayslipPage() {
                   {" "}
                   <div className="flex items-center justify-between">
                     {" "}
-                    <span>Social Security (5.5%)</span>{" "}
+                    <span>Employee SSF (5.5%)</span>{" "}
                     <span className="font-semibold">
-                      {formatMoney(viewingEntry.socialSecurity)}
+                      {viewingEntry.includeEmployeeSsnit !== false
+                        ? formatMoney(viewingEntry.socialSecurity)
+                        : "Off"}
                     </span>{" "}
                   </div>{" "}
                   <div className="flex items-center justify-between">
@@ -2779,6 +3064,17 @@ export default function PayslipPage() {
                       {formatMoney(viewingEntry.absenteeismDeduction)}
                     </span>{" "}
                   </div>{" "}
+                  {(viewingEntry.customDeductions ?? []).map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between"
+                    >
+                      <span>{item.label}</span>
+                      <span className="font-semibold">
+                        {formatMoney(item.amount)}
+                      </span>
+                    </div>
+                  ))}{" "}
                   <div className="flex items-center justify-between">
                     {" "}
                     <span>Provident 3.5%</span>{" "}
